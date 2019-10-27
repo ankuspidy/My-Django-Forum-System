@@ -1,0 +1,51 @@
+{% extends "forum/base.html" %}
+
+{% block content %}
+
+
+<div class="card border-secondary col-mb-ml-auto pb-auto shadow" dir="rtl">
+    <div class="card-header">
+
+        <div class="article article-text">
+            <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
+            <small class="text-muted">{{ object.date_objected|date:"j/n/y" }}</small>
+            {% if object.author == user %}
+            <div>
+
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+    <div class="card-body text-secondary article-text">
+
+        <h2 class="article-title"><a class="article-title">{{ post.title }}</a></25>
+            <p class="article-content ">{{ post.message_body }}</p>
+            
+
+
+    </div>
+
+    {% for message in messages_thread %}
+    <div class="card-body text-secondary article-text">
+
+        <p class="article-content "> {{ message }} - {{ message.message_body }}</p>
+
+    </div>
+    {% endfor %}
+
+
+
+    <div class="card-body text-secondary article-text">
+
+        
+
+        <p><a class="btn btn-warning" href="{% url 'forum:forum-board' post.forum %}">Return</a></p>
+
+
+    </div>
+    
+</div>
+<div class="pb-4 pr-3"></div>
+
+{% endblock content %}

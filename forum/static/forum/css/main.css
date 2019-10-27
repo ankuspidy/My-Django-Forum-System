@@ -1,0 +1,167 @@
+/*
+    DEMO STYLE
+*/
+
+@import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
+body {
+    font-family: 'Poppins', sans-serif;
+
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-size: cover; /* Resize the background image to cover the entire container */
+}
+
+
+.forum{
+    font-size: 100px;
+}
+
+p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.7em;
+    color: #999;
+}
+
+a,
+a:hover,
+a:focus {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.right-sidebar:hover {
+    color: #f1a23b;
+    background: #fff;
+  }
+
+.navbar {
+    padding: 15px 10px;
+    background: #fff;
+    font-family: 'Secular One', sans-serif;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0px;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+
+    
+}
+
+.nav-item:hover {
+    color: #f1a23b;
+    background: #fff;
+  }
+
+.navbar-nav {
+    box-shadow: none;
+    outline: none !important;
+    border: none;
+}
+
+.line {
+    width: 100%;
+    height: 1px;
+    border-bottom: 1px dashed #ddd;
+    margin: 40px 0;
+}
+
+i,
+span {
+    display: inline-block;
+}
+
+.page {
+    min-width: 80px;
+    max-width: 80px;
+    font-size: 1px;
+}
+
+.h5 {
+    font-size: 10vw;
+}
+/********************
+Posts
+*********************/
+  
+.article-text {
+    text-align: left;
+    font-family: 'Secular One', sans-serif; 
+    font-size: 1rem;
+}
+
+  .article-title {
+    color: #444444;
+  }
+  
+  a.article-title:hover {
+    color: #428bca;
+    text-decoration: none;
+  }
+  
+  .article-content {
+    white-space: pre-line;
+  }
+  
+  .article-img {
+    height: 65px;
+    width: 65px;
+    margin-right: 16px;
+  }
+  
+  .article-metadata {
+    padding-bottom: 1px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #e3e3e3
+  }
+  
+  .article-metadata a:hover {
+    color: #333;
+    text-decoration: none;
+  }
+  
+  .article-svg {
+    width: 25px;
+    height: 25px;
+    vertical-align: middle;
+  }
+  
+  .account-img {
+    height: 125px;
+    width: 125px;
+    margin-right: 20px;
+    margin-bottom: 16px;
+  }
+  
+  .account-heading {
+    font-size: 2.5rem;
+  }
+
+
+
+a.article,
+a.article:hover {
+    background: #6d7fcc !important;
+    color: #fff !important;
+}
+
+/* ---------------------------------------------------
+    CONTENT STYLE
+----------------------------------------------------- */
+
+#content {
+    width: 50%;
+    padding: 10px;
+    min-height: 10vh;
+    transition: all 0.3s;
+}
+
+/* ---------------------------------------------------
+    MEDIAQUERIES
+----------------------------------------------------- */
+@viewport {
+    width: device-width ;
+    zoom: 1.0 ;
+  }
+  
