@@ -16,7 +16,7 @@
 
 
     </div>
-    {% for post in posts %}
+    {% for post in main_topics %}
 
     <div class="card-body text-secondary article-text">
 
@@ -38,24 +38,27 @@
                   {{ post.like_list.count }}
                </span>
                <span class="article-title">
-                  
+
                   <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
                   {{ post.unlike_list.count }}
                </span>
           </div>
           <div class="col-3 article-title text-center mt-3">
-            <span>Comments: {{ post.comments.count|add:post.replies.count }} </span>
-                  
-          
+            {% for message_title, post_replies_amount in replies_amount.items %}
+              {% if message_title == post.title %}
+            <span>Comments: {{ post.thread_posts.count|add:post_replies_amount }} </span>
+            {% endif %}
+          {% endfor %}
+
           </div>
           {% for message_title, last_message in messages_details.items %}
             {% if message_title == post.title %}
               <div class="col-3 mt-3">
-                
-            
+
+
               <small class="text-sm-center">{{ last_message.message_body }}</small><br>
               <small class="text-sm-center">{{ last_message.author }}, {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
-                
+
               </div>
             {% endif %}
           {% endfor %}

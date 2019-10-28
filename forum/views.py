@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.db.models import Q
 
 from django.contrib.auth.models import User
 from .models import Forum, ForumCategory, MainTopic, Comment, Reply
@@ -18,6 +19,7 @@ class ForumListView(ListView):
                 main_topics = MainTopic.objects.filter(forum__name=forum.name).order_by('datetime')
                 
                 if main_topics.count() == 0:
+                    forum_details[forum.name] = (0, 0, "None")
                     continue
                 
                 times = [ main_topics.last() ]
@@ -28,6 +30,7 @@ class ForumListView(ListView):
                 if comments.count() != 0:
                     times.append(comments.last())
                 if replies.count() != 0:
+                    print(replies.last().message_body)
                     times.append(replies.last())
 
                 last_message = sorted(times, key = attrgetter('datetime'), reverse=True)
@@ -44,7 +47,6 @@ class ForumListView(ListView):
 
         return context
 
-    
 class ForumPostsListView(ListView):
     model = MainTopic
     template_name = 'forum/forum.html'
@@ -57,17 +59,22 @@ class ForumPostsListView(ListView):
         queryset = MainTopic.objects.order_by('datetime')
         return queryset
 
-    def get_last_message(self, messages_list)->dict:
+    def get_last_message(self, forum_name, main_topics)->dict:
         last_messages = dict()
+        threads_replies_amount = dict()
 
-        if messages_list.count() == 0:
+        if main_topics.count() == 0:
             return "None"
         else:
-            for message in messages_list:
-
+            #total_replies = Reply.objects.filter(forum__name=forum_name)
+            for thread in main_topics:
                 last_message_by_time = list()
-                comments = message.comments.all().order_by('datetime')
-                replies = message.replies.all().order_by('datetime')
+                comments = thread.thread_posts.all().order_by('datetime')          
+                #replies = total_replies.filter( Q(reply_to_main_thread=thread.id) | Q(reply_to_comment=thread.id)  | Q(reply_to_older_reply=thread.id) ).order_by('datetime')
+                replies = Reply.objects.filter(forum=thread.forum, thread_id=thread.id)
+
+                threads_replies_amount[thread.title] = replies.count()
+           
 
                 if comments.count() != 0:
                     last_message_by_time.append(comments.last())
@@ -77,21 +84,19 @@ class ForumPostsListView(ListView):
                 last_message_by_time = sorted(last_message_by_time, key = attrgetter('datetime'), reverse=True)
                 
                 if len(last_message_by_time) != 0:
-                    last_messages[message.title] = last_message_by_time[0]
+                    last_messages[thread.title] = last_message_by_time[0]
                 else:
-                    last_messages[message.title] = "None"
+                    last_messages[thread.title] = "None"
 
-                
-            return last_messages
+            return (last_messages, threads_replies_amount)
     
     def get_context_data(self, **kwargs):
         context = super(ForumPostsListView, self).get_context_data(**kwargs)
         forum_name = self.kwargs['pk']
-        posts = MainTopic.objects.filter(forum__name=forum_name)
-        messages_details = self.get_last_message(posts)
-        context = dict(forum_name=forum_name, posts=posts, messages_details=messages_details)
-        # context['forum_name'] = forum_name          
-        # context['posts'] = posts
+        main_topics = MainTopic.objects.filter(forum__name=forum_name)
+        messages_details = self.get_last_message(forum_name, main_topics)
+        context = dict(forum_name=forum_name, main_topics=main_topics, messages_details=messages_details[0], \
+                       replies_amount=messages_details[1])
 
         return context
 
@@ -103,22 +108,22 @@ class ForumPostDetailView(DetailView):
     def get_context_data(self, **kwargs):
 
         context = super(ForumPostDetailView, self).get_context_data(**kwargs)
-        post_pk = self.kwargs['pk']
-        post = MainTopic.objects.filter(id=post_pk).first()
-        comments = list(post.comments.all())
-        replies = list(post.replies.all())
-        messages_thread = sorted(comments + replies, key = attrgetter('datetime') )
+        thread_pk = self.kwargs['pk']
+        thread = MainTopic.objects.filter(id=thread_pk).first()
+        comments = thread.thread_posts.all().order_by('datetime')          
         
-        #messages_thread = comments.union(replies)#.orderby('date_time')
-        context['forum_name'] = post.forum
-        context['post'] = post
+        replies = Reply.objects.all().filter(forum=thread.forum, thread_id=thread.id)
+        
+        comments = list(comments.all())
+        replies = list(replies.all())
+        messages_thread = sorted(comments + replies, key = attrgetter('datetime') )
+
+        context['forum_name'] = thread.forum
+        context['post'] = thread
         context['messages_thread'] = messages_thread
         
 
         return context
 
     def get_absolute_url(self):
-        print(self)
-        print(dir(self.request))
-        print(self.args)
         return reverse_lazy('', kwargs={'pk': self.pk})

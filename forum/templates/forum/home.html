@@ -57,9 +57,12 @@
             <!-- 0 Messages -->
           </div>
           <div class="col-3">
-         
-              <small class="text-sm-center">{{ details.2 }}</small><br>
+              
+              <small class="text-sm-center">{{ details.2.message_body }}</small>
+              {% if details.2 != "None" %}
+              <br>
               <small class="text-sm-center">{{ details.2.author }}, {{ details.2.datetime|date:"j/n/y-H:i" }}</small>
+              {% endif %}
           </div>
           {% endif %}
         {% endfor %}

@@ -46,11 +46,20 @@
                 </div>
                 <div class="col-md-8">
                     <div class="card-body">
-
+{{ message }}
                         {% if message|stringformat:"s" == "Python-Comment" %}
                                this is comment
                         {% else %}
-                                this is reply
+                                this is reply to: 
+                                
+                                {% if message.reply_to_comment %}
+                                 {{ message.reply_to_comment.message_body }}
+                                {% elif message.reply_to_main_thread  %}
+                                 {{ message.reply_to_main_thread }}
+                                {% else %}
+                                   {{ message.reply_to_older_reply.message_body }}
+                                {% endif %}
+                                
                         {% endif %}
 
                         <p class="card-text">{{ message.message_body }}</p>
