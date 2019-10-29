@@ -21,3 +21,13 @@ class NewCommentForm(ModelForm):
           'datetime': HiddenInput(),
           'forum': HiddenInput(),
         }
+
+class NewReplyForm(ModelForm):
+  
+    class Meta:
+        model = Reply
+        fields = ['message_body']
+        widgets = {
+          'datetime': HiddenInput(),
+          'forum': HiddenInput(),
+        }

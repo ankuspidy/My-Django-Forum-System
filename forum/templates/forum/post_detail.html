@@ -34,7 +34,10 @@
                         <p class="card-text">{{ post.message_body }}</p>
                         <p class="card-text"><small class="text-muted">{{ post.datetime|date:"j/n/y-H:i" }}</small></p>
                         <div class="article article-text text-right">
-                            <a href="{% url 'forum:new-post' forum_name %}" class="btn btn-dark btn-sm">Reply</a> 
+                            <span class="article-title">
+                                <a class="btn btn-dark"
+                                  href=" {% url 'forum:new-reply' post.forum 'post' post.id post.id %}">Reply</a>
+                              </span>
                         </div>
                     </div>
                 </div>
@@ -71,7 +74,10 @@
                         <p class="card-text">{{ message.message_body }}</p>
                         <p class="card-text"><small class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small></p>
                         <div class="article article-text text-right">
-                            <a href="{% url 'forum:new-post' forum_name %}" class="btn btn-dark btn-sm">Reply</a> 
+                            <span class="article-title">
+                                <a class="btn btn-dark"
+                                  href=" {% url 'forum:new-reply' post.forum 'post' post.id message.id %}">Reply</a>
+                              </span>
                         </div>
                     </div>
                 </div>
