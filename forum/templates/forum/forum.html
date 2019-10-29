@@ -13,7 +13,9 @@
       <div class="article article-text text-center">
         {{ forum_name }}
       </div>
-
+      <div class="article article-text text-center">
+        <a href="{% url 'forum:new-post' forum_name %}" class="btn btn-warning">New Post</a>
+      </div>
 
     </div>
     {% for post in main_topics %}
@@ -33,40 +35,36 @@
             <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
           </div>
           <div class="col-1 mt-1">
-              <span class="article-title">
-                  <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
-                  {{ post.like_list.count }}
-               </span>
-               <span class="article-title">
+            <span class="article-title">
+              <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
+              {{ post.like_list.count }}
+            </span>
+            <span class="article-title">
 
-                  <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
-                  {{ post.unlike_list.count }}
-               </span>
+              <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
+              {{ post.unlike_list.count }}
+            </span>
           </div>
           <div class="col-3 article-title text-center mt-3">
             {% for message_title, post_replies_amount in replies_amount.items %}
-              {% if message_title == post.title %}
+            {% if message_title == post.title %}
             <span>Comments: {{ post.thread_posts.count|add:post_replies_amount }} </span>
             {% endif %}
-          {% endfor %}
+            {% endfor %}
 
           </div>
           {% for message_title, last_message in messages_details.items %}
-            {% if message_title == post.title %}
-              <div class="col-3 mt-3">
+          {% if message_title == post.title and last_message != 'None' %}
+          <div class="col-3 mt-3">
+            <small class="text-sm-center">{{ last_message.message_body }}</small><br>
+            <small class="text-sm-center">{{ last_message.author }},
+              {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
 
-
-              <small class="text-sm-center">{{ last_message.message_body }}</small><br>
-              <small class="text-sm-center">{{ last_message.author }}, {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
-
-              </div>
-            {% endif %}
+          </div>
+          {% endif %}
           {% endfor %}
         </div>
       </div>
-
-
-
     </div>
 
     {% endfor %}

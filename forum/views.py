@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib import messages
 
 from django.contrib.auth.models import User
 from .models import Forum, ForumCategory, MainTopic, Comment, Reply
+from .forms import NewPostForm, NewCommentForm
 
+from datetime import datetime as date_time
 from operator import attrgetter
 
 class ForumListView(ListView):
@@ -30,7 +33,6 @@ class ForumListView(ListView):
                 if comments.count() != 0:
                     times.append(comments.last())
                 if replies.count() != 0:
-                    print(replies.last().message_body)
                     times.append(replies.last())
 
                 last_message = sorted(times, key = attrgetter('datetime'), reverse=True)
@@ -66,11 +68,9 @@ class ForumPostsListView(ListView):
         if main_topics.count() == 0:
             return "None"
         else:
-            #total_replies = Reply.objects.filter(forum__name=forum_name)
             for thread in main_topics:
                 last_message_by_time = list()
                 comments = thread.thread_posts.all().order_by('datetime')          
-                #replies = total_replies.filter( Q(reply_to_main_thread=thread.id) | Q(reply_to_comment=thread.id)  | Q(reply_to_older_reply=thread.id) ).order_by('datetime')
                 replies = Reply.objects.filter(forum=thread.forum, thread_id=thread.id)
 
                 threads_replies_amount[thread.title] = replies.count()
@@ -111,19 +111,83 @@ class ForumPostDetailView(DetailView):
         thread_pk = self.kwargs['pk']
         thread = MainTopic.objects.filter(id=thread_pk).first()
         comments = thread.thread_posts.all().order_by('datetime')          
-        
         replies = Reply.objects.all().filter(forum=thread.forum, thread_id=thread.id)
         
         comments = list(comments.all())
         replies = list(replies.all())
         messages_thread = sorted(comments + replies, key = attrgetter('datetime') )
 
-        context['forum_name'] = thread.forum
-        context['post'] = thread
-        context['messages_thread'] = messages_thread
-        
+        context = dict(forum_name=thread.forum, post=thread, messages_thread=messages_thread)
 
         return context
 
     def get_absolute_url(self):
         return reverse_lazy('', kwargs={'pk': self.pk})
+
+class ForumNewPostCreateView(LoginRequiredMixin, CreateView):
+    model = MainTopic
+    fields = ['title', 'message_body']
+
+    def get(self, request, *args, **kwargs):
+        new_post_form = NewPostForm()
+
+        return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
+    
+    def post(self, request, *args, **kwargs):
+
+        new_post_form = NewPostForm(request.POST)
+
+        if new_post_form.is_valid():
+            
+            new_post_form.instance.author = self.request.user
+            new_post_form.instance.datetime = new_post_form.cleaned_data.get('datetime')
+            new_post_form.instance.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()
+            new_post_form.save()
+
+            messages.success(request, "Your Post Has Been Published!")
+            return redirect('forum:forum-board', kwargs['forum'])
+
+        else:
+            print("error: ", new_post_form.errors)
+            new_post_form = NewPostForm(request.POST)
+
+            return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
+
+
+
+
+class ForumNewCommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    fields = ['message_body']
+
+    def get(self, request, *args, **kwargs):
+        new_comment_form = NewCommentForm()
+
+        return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
+    
+    def post(self, request, *args, **kwargs):
+
+        print(kwargs)
+
+        new_comment_form = NewCommentForm(request.POST)
+
+        if new_comment_form.is_valid():
+            
+            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
+            comment = new_comment_form.instance
+            comment.author = self.request.user
+            comment.datetime = new_comment_form.cleaned_data.get('datetime')
+            comment.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()          
+            
+            comment.save()
+            main_topic.thread_posts.add(comment.pk)
+            
+            new_comment_form.save()
+
+            return redirect('forum:forum-board', kwargs['forum'])
+
+        else:
+            print("error: ", new_comment_form.errors)
+            new_comment_form = NewCommentForm(request.POST)
+
+            return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})

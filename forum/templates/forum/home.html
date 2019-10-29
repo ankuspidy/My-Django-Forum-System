@@ -3,9 +3,6 @@
 {% block content%}
 
 <div class="container-fluid">
-  <!-- Example row of columns -->
-
-  <!-- display-5 Main jumbotron for a primary marketing message or call to action -->
   <div class="jumbotron alert alert-light border border-secondary shadow">
     {% if user.is_authenticated %}
     <h4 class="article-text text-center text-justify text-sm-center">ברוכים הנמצאים</h4>
@@ -54,7 +51,6 @@
           </div>
           <div class="col-2">
               {{ details.1 }} Message{{ details.1|pluralize}}
-            <!-- 0 Messages -->
           </div>
           <div class="col-3">
               

@@ -20,7 +20,7 @@ class Post(models.Model):
     author = models.ForeignKey(User, default = "", on_delete=models.CASCADE, related_name='+')
     forum = models.ForeignKey(Forum,blank=True, null=True, on_delete=models.CASCADE)
     message_body = models.TextField(blank=False, default="")
-    datetime = models.DateTimeField(default="")#auto_now=True)
+    datetime = models.DateTimeField(auto_now_add=True)
     like_list = models.ManyToManyField(User, blank=True, related_name='+')
     unlike_list = models.ManyToManyField(User, blank=True, related_name='+')
     announcement = models.BooleanField(default=False)
@@ -33,8 +33,8 @@ class Post(models.Model):
     def __str__(self):
         return f"{self.forum}-{self.author}"
 
-    def get_absolute_url(self):
-        return reverse("post-detail", kwargs={"pk": self.pk})
+    # def get_absolute_url(self):
+    #     return reverse("post-detail", kwargs={"pk": self.pk})
 
 class Comment(Post):
 
@@ -45,7 +45,6 @@ class Comment(Post):
 class MainTopic(Post):
     title = models.CharField(max_length=50, blank=False, default="")
     thread_posts = models.ManyToManyField(Comment, blank=True, related_name='+')
-    #replies = models.ManyToManyField(Reply,blank=True, related_name='+')
 
     def __str__(self):
         return self.title
