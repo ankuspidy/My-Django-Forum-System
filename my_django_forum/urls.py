@@ -26,7 +26,7 @@ urlpatterns = [
     path('register/', user_views.RegisterFormView.as_view(), name='register'),
     path('login/', auth_views.LoginView.as_view(template_name= 'registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
-    #path('profile/', users_views.profile, name='profile'),
+    path('profile/', user_views.ProfileFormView.as_view() , name='profile'),
     path('password-reset/', user_views.UserPasswordResetView.as_view(), name='password_reset'),
     path('password-reset-confirm/<uidb64>/<token>/',
         auth_views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm.html'),

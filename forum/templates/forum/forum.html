@@ -30,7 +30,7 @@
           <div class="col-3 mt-1">
             <span class="article-title">
               <a class="article-title"
-                href=" {% url 'forum:post-detail' post.forum 'post' post.id %}">{{ post.title }}</a>
+                href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
             </span>
             <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
           </div>

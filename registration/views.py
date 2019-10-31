@@ -1,8 +1,10 @@
+from datetime import datetime, date
+
 from django.shortcuts import render, redirect, HttpResponse
 from django.urls import reverse_lazy
 from django.contrib.auth.views import FormView, PasswordResetView
 from django.contrib.auth.models import User
-
+from django.contrib import messages
 
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template, render_to_string
@@ -10,14 +12,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .forms import UserRegistrationForm, ProfileUpdateForm
+from .forms import UserRegistrationForm, UserUpdateForm, ProfileUpdateForm
+from .models import Profile
 from my_django_forum.settings import DEFAULT_FROM_EMAIL
 
-
-def home(request):
-    context = {}
-    html = '<h1>Hello World</h1>'
-    return HttpResponse(html)
 
 class RegisterFormView(FormView):
     template_name = 'registration/register.html'
@@ -34,15 +32,20 @@ class RegisterFormView(FormView):
         profile_form = ProfileUpdateForm(request.POST)#, request.FILES, instance=request.user.profile)
 
         if user_form.is_valid() and profile_form.is_valid():
-            user_form.save()
-            
-            profile_form.instance = user_form.instance.profile
-            profile_form.instance.phone_number = profile_form.cleaned_data.get('phone_number')
-            profile_form.instance.nickname = profile_form.cleaned_data.get('nickname')
+               
+                user_form.save()
 
-            profile_form.save()
-            #messages.success(request, 'הפרופיל נוצר! ניתן כעת להתחבר לאתר.')
-            return redirect('home')
+                profile_form.instance = user_form.instance.profile
+                profile_form.instance.phone_number = profile_form.cleaned_data.get('phone_number')
+                profile_form.instance.birth_day = profile_form.cleaned_data.get('birth_day')
+                profile_form.instance.social_media = profile_form.cleaned_data.get('social_media')
+                profile_form.instance.summary = profile_form.cleaned_data.get('summary')
+
+                profile_form.save()
+                
+                messages.success(request, 'Your profile has been created! You may login!')
+
+                return redirect('login')
 
         else:
             print("error: ", user_form.errors)
@@ -81,3 +84,34 @@ class UserPasswordResetView(PasswordResetView):
 
 
 
+class ProfileFormView(FormView):
+    template_name = 'registration/profile.html'
+
+    def get(self, request, *args, **kwargs):
+        user_form = UserUpdateForm(instance=request.user)
+        profile_form = ProfileUpdateForm(instance=request.user.profile)
+
+        context = dict(user_form=user_form, profile_form=profile_form)
+
+        return render(request, 'registration/profile.html', context)
+    
+    def post(self, request, *args, **kwargs):
+
+        user_form = UserUpdateForm(request.POST, instance=request.user)
+        profile_form = ProfileUpdateForm(request.POST, instance=request.user.profile)#, request.FILES, )
+
+        if user_form.is_valid() and profile_form.is_valid():
+            
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Profile has been updated!')
+            return redirect('profile')
+
+        else:
+            print("error: ", user_form.errors)
+            user_form = UserRegistrationForm(request.POST)
+            profile_form = ProfileUpdateForm(request.POST)
+
+            context = dict(user_form=user_form, profile_form=profile_form)
+
+            return render(request, 'registration/profile.html', context)

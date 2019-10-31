@@ -124,6 +124,91 @@ class ForumPostDetailView(DetailView):
     def get_absolute_url(self):
         return reverse_lazy('', kwargs={'pk': self.pk})
 
+
+class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = MainTopic
+    template_name = 'forum/update_post.html'
+    fields = ['title', 'message_body']
+   
+
+    def test_func(self):
+        post = self.get_object()
+        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+            return True
+        return False
+
+    
+    def post(self, request, *args, **kwargs):
+
+        update_post_form = NewPostForm(request.POST)
+
+        if update_post_form.is_valid():
+
+            MainTopic.objects.filter(forum__name=kwargs['forum'], id=kwargs['pk']).update(title=request.POST['title'], \
+                                     message_body=request.POST['message_body'])
+            messages.success(request, "Your Post Has Been Updated!")
+            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+
+        else:
+            print("error: ", update_post_form.errors)
+            update_post_form = NewPostForm(request.POST)
+
+            return render(request, 'forum/update_post.html', {'update_post_form': update_post_form})
+
+class ForumCommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    template_name = 'forum/update_comment.html'
+    fields = ['message_body']
+
+    
+    def test_func(self, *args, **kwargs):
+
+        post = self.get_object()
+        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+            return True
+        return False
+
+    def get_object(self, queryset=None):
+            obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            return obj
+
+    def post(self, request, *args, **kwargs):
+
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+
+        if form_class.is_valid(form):
+            
+            Comment.objects.filter(forum__name=kwargs['forum'], id=kwargs['id']).update(message_body=request.POST['message_body'])
+            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
+   
+class ForumReplyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Reply
+    template_name = 'forum/update_reply.html'
+    fields = ['message_body']
+
+    def test_func(self, *args, **kwargs):
+
+        post = self.get_object()
+        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+            return True
+        return False
+
+    def get_object(self, queryset=None):
+            obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            return obj
+
+    def post(self, request, *args, **kwargs):
+
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+
+        if form_class.is_valid(form):
+            
+            Reply.objects.filter(forum__name=kwargs['forum'], id=kwargs['id']).update(message_body=request.POST['message_body'])
+            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
+
+
 class ForumNewPostCreateView(LoginRequiredMixin, CreateView):
     model = MainTopic
     fields = ['title', 'message_body']
@@ -138,11 +223,14 @@ class ForumNewPostCreateView(LoginRequiredMixin, CreateView):
         new_post_form = NewPostForm(request.POST)
 
         if new_post_form.is_valid():
-            
             new_post_form.instance.author = self.request.user
             new_post_form.instance.datetime = new_post_form.cleaned_data.get('datetime')
             new_post_form.instance.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()
             new_post_form.save()
+
+            user = self.request.user
+            user.profile.posts_counter += 1
+            user.profile.save()
 
             messages.success(request, "Your Post Has Been Published!")
             return redirect('forum:forum-board', kwargs['forum'])
@@ -176,8 +264,11 @@ class ForumNewCommentCreateView(LoginRequiredMixin, CreateView):
             
             comment.save()
             main_topic.thread_posts.add(comment.pk)
-            
             new_comment_form.save()
+
+            user = self.request.user
+            user.profile.posts_counter += 1
+            user.profile.save()
 
             return redirect('forum:forum-board', kwargs['forum'])
 
@@ -234,6 +325,10 @@ class ForumNewReplyCreateView(LoginRequiredMixin, CreateView):
             #main_topic.thread_posts.add(comment.pk)
             
             new_reply_form.save()
+            
+            user = self.request.user
+            user.profile.posts_counter += 1
+            user.profile.save()
 
             return redirect('forum:forum-board', kwargs['forum'])
 
