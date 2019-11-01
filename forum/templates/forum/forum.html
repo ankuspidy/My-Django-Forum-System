@@ -29,8 +29,7 @@
           </div>
           <div class="col-3 mt-1">
             <span class="article-title">
-              <a class="article-title"
-                href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
+              <a class="article-title" href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
             </span>
             <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
           </div>
@@ -46,22 +45,30 @@
             </span>
           </div>
           <div class="col-3 article-title text-center mt-3">
-            {% for message_title, post_replies_amount in replies_amount.items %}
+            {% for message_title, posts_amount in threads_posts_amount.items %}
             {% if message_title == post.title %}
-            <span>Comments: {{ post.thread_posts.count|add:post_replies_amount }} </span>
+            <span>Comments: {{ posts_amount }} </span>
             {% endif %}
             {% endfor %}
 
           </div>
           {% for message_title, last_message in messages_details.items %}
-          {% if message_title == post.title and last_message != 'None' %}
+
+          {% if message_title == post.title %}
           <div class="col-3 mt-3">
+            {% if last_message != 'None' %}
             <small class="text-sm-center">{{ last_message.message_body }}</small><br>
             <small class="text-sm-center">{{ last_message.author }},
               {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
 
+            {% else %}
+            <small class="text-sm-center">{{ post.message_body }}</small><br>
+            <small class="text-sm-center">{{ post.author }},
+              {{ post.datetime|date:"j/n/y-H:i" }}</small>
+            {% endif %}
           </div>
           {% endif %}
+
           {% endfor %}
         </div>
       </div>

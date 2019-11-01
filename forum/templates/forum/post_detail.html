@@ -35,11 +35,11 @@
                         <p class="card-text"><small class="text-muted">{{ post.datetime|date:"j/n/y-H:i" }}</small></p>
                         <div class="article article-text text-right">
                             <span class="article-title">
-                                {% if user.is_superuser or user.is_staff %}
+                                {% if post.author == user or user.is_superuser or user.is_staff %}
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:post-update' post.forum post.id %}">Edit</a>
                                 <a class="btn-sm btn-dark"
-                                    href=" {% url 'forum:new-comment' post.forum post.id %}">Remove</a>
+                                    href=" {% url 'forum:post-delete' post.forum post.id %}">Remove</a>
                                 
                                 {% endif %}
                                 {% if post.author != user %}
@@ -86,7 +86,7 @@
                         <p class="card-text"><small class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small></p>
                         <div class="article article-text text-right">
                             <span class="article-title">
-                                {% if user.is_superuser or user.is_staff %}
+                                {% if message.author == user or user.is_superuser or user.is_staff %}
                                     {% if 'Comment' in message|stringformat:"s" %}
                                         <a class="btn-sm btn-dark"
                                             href=" {% url 'forum:comment-update' message.forum post.id message.id %}">Edit</a>

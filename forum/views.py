@@ -63,18 +63,19 @@ class ForumPostsListView(ListView):
 
     def get_last_message(self, forum_name, main_topics)->dict:
         last_messages = dict()
-        threads_replies_amount = dict()
+        #threads_replies_amount = dict()
+        threads_posts_amount = dict()
 
         if main_topics.count() == 0:
             return "None"
         else:
             for thread in main_topics:
                 last_message_by_time = list()
-                comments = thread.thread_posts.all().order_by('datetime')          
+                comments = Comment.objects.filter(forum=thread.forum, thread_id=thread.id)#thread.thread_posts.all().order_by('datetime')          
                 replies = Reply.objects.filter(forum=thread.forum, thread_id=thread.id)
 
-                threads_replies_amount[thread.title] = replies.count()
-           
+                #threads_replies_amount[thread.title] = replies.count()
+                threads_posts_amount[thread.title] = replies.count() + comments.count()
 
                 if comments.count() != 0:
                     last_message_by_time.append(comments.last())
@@ -87,8 +88,8 @@ class ForumPostsListView(ListView):
                     last_messages[thread.title] = last_message_by_time[0]
                 else:
                     last_messages[thread.title] = "None"
-
-            return (last_messages, threads_replies_amount)
+                
+            return (last_messages, threads_posts_amount)# threads_replies_amount)
     
     def get_context_data(self, **kwargs):
         context = super(ForumPostsListView, self).get_context_data(**kwargs)
@@ -96,7 +97,7 @@ class ForumPostsListView(ListView):
         main_topics = MainTopic.objects.filter(forum__name=forum_name)
         messages_details = self.get_last_message(forum_name, main_topics)
         context = dict(forum_name=forum_name, main_topics=main_topics, messages_details=messages_details[0], \
-                       replies_amount=messages_details[1])
+                       threads_posts_amount=messages_details[1])#replies_amount=messages_details[1])
 
         return context
 
@@ -109,8 +110,8 @@ class ForumPostDetailView(DetailView):
 
         context = super(ForumPostDetailView, self).get_context_data(**kwargs)
         thread_pk = self.kwargs['pk']
-        thread = MainTopic.objects.filter(id=thread_pk).first()
-        comments = thread.thread_posts.all().order_by('datetime')          
+        thread = MainTopic.objects.filter(id=thread_pk).first()  
+        comments = Comment.objects.all().filter(forum=thread.forum, thread_id=thread.id)
         replies = Reply.objects.all().filter(forum=thread.forum, thread_id=thread.id)
         
         comments = list(comments.all())
@@ -172,21 +173,20 @@ class ForumCommentCreateView(LoginRequiredMixin, CreateView):
 
         if new_comment_form.is_valid():
             
-            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
             comment = new_comment_form.instance
+            comment.thread_id =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
             comment.author = self.request.user
             comment.datetime = new_comment_form.cleaned_data.get('datetime')
             comment.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()          
-            
+
             comment.save()
-            main_topic.thread_posts.add(comment.pk)
             new_comment_form.save()
 
             user = self.request.user
             user.profile.posts_counter += 1
             user.profile.save()
 
-            return redirect('forum:forum-board', kwargs['forum'])
+            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
 
         else:
             print("error: ", new_comment_form.errors)
@@ -210,43 +210,25 @@ class ForumReplyCreateView(LoginRequiredMixin, CreateView):
         if new_reply_form.is_valid():
 
             main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
-
-            # reply_to_main_topic = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            # comment_to_reply = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            # reply_to_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-
-            # print(reply_to_main_topic)
-            # print(reply_to_reply)
-            # print(comment_to_reply)
-            # thread_id = models.ForeignKey(MainTopic, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
-            # reply_to_main_thread = models.ForeignKey(MainTopic, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
-            # reply_to_comment = models.ForeignKey(Comment, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
-            # reply_to_older_reply = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)#    
-            
-            
+           
             reply = new_reply_form.instance
-
             reply.thread_id = main_topic
             reply.reply_to_main_thread  = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
             reply.reply_to_comment  = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
             reply.reply_to_older_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
 
-
             reply.author = self.request.user
             reply.datetime = new_reply_form.cleaned_data.get('datetime')
             reply.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()      
-  
             
             reply.save()
-            #main_topic.thread_posts.add(comment.pk)
-            
             new_reply_form.save()
             
             user = self.request.user
             user.profile.posts_counter += 1
             user.profile.save()
 
-            return redirect('forum:forum-board', kwargs['forum'])
+            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
 
         else:
             print("error: ", new_reply_form.errors)
@@ -275,9 +257,9 @@ class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         update_post_form = NewPostForm(request.POST)
 
         if update_post_form.is_valid():
-
-            MainTopic.objects.filter(forum__name=kwargs['forum'], id=kwargs['pk']).update(title=request.POST['title'], \
-                                     message_body=request.POST['message_body'])
+            current_datetime = date_time.now()
+            main_topic = MainTopic.objects.filter(forum__name=kwargs['forum'], id=kwargs['pk'])
+            main_topic.update(title=request.POST['title'], message_body=request.POST['message_body'], datetime=current_datetime)
             messages.success(request, "Your Post Has Been Updated!")
             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
 
@@ -311,7 +293,10 @@ class ForumCommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
 
         if form_class.is_valid(form):
             
-            Comment.objects.filter(forum__name=kwargs['forum'], id=kwargs['id']).update(message_body=request.POST['message_body'])
+            current_datetime = date_time.now()
+            comment = Comment.objects.filter(forum__name=kwargs['forum'], id=kwargs['id'])
+            comment.update(message_body=request.POST['message_body'], datetime=current_datetime)
+            
             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
    
 class ForumReplyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -337,7 +322,10 @@ class ForumReplyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         if form_class.is_valid(form):
             
-            Reply.objects.filter(forum__name=kwargs['forum'], id=kwargs['id']).update(message_body=request.POST['message_body'])
+            current_datetime = date_time.now()
+            reply = Reply.objects.filter(forum__name=kwargs['forum'], id=kwargs['id'])
+            reply.update(message_body=request.POST['message_body'], datetime=current_datetime)
+            
             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
 
 
@@ -360,6 +348,9 @@ class ForumCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
         return obj
 
     def post(self, request, *args, **kwargs):
+        user = self.request.user
+        user.profile.posts_counter -= 1
+        user.profile.save()
 
         messages.success(request, "Your Post Has Been Deleted")
         self.delete(request, *args, **kwargs)
@@ -383,9 +374,39 @@ class ForumReplyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return obj
 
     def post(self, request, *args, **kwargs):
+        user = self.request.user
+        user.profile.posts_counter -= 1
+        user.profile.save()
 
         messages.success(request, "Your Post Has Been Deleted")
         self.delete(request, *args, **kwargs)
         return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
     
+class ForumMainTopicDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = MainTopic
+    template_name = 'forum/post_confirm_delete.html'
+    success_url = '/'
+
+    def test_func(self):
+        post = self.get_object()
+        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+            return True
+        return False
+
+    def get_object(self, queryset=None):
+        obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['pk'])
+        obj.main_topic = self.kwargs['pk']
+        return obj
+
+    def post(self, request, *args, **kwargs):
+
+        user = self.request.user
+        user.profile.posts_counter -= 1
+        user.profile.save()
+        
+        messages.success(request, "Your Post Has Been Deleted")
+        self.delete(request, *args, **kwargs)
+        return redirect('forum:forum-board', kwargs['forum'])
+
+
     
