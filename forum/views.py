@@ -125,6 +125,138 @@ class ForumPostDetailView(DetailView):
         return reverse_lazy('', kwargs={'pk': self.pk})
 
 
+class ForumMainTopicCreateView(LoginRequiredMixin, CreateView):
+    model = MainTopic
+    fields = ['title', 'message_body']
+
+    def get(self, request, *args, **kwargs):
+        new_post_form = NewPostForm()
+
+        return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
+    
+    def post(self, request, *args, **kwargs):
+
+        new_post_form = NewPostForm(request.POST)
+
+        if new_post_form.is_valid():
+            new_post_form.instance.author = self.request.user
+            new_post_form.instance.datetime = new_post_form.cleaned_data.get('datetime')
+            new_post_form.instance.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()
+            new_post_form.save()
+
+            user = self.request.user
+            user.profile.posts_counter += 1
+            user.profile.save()
+
+            messages.success(request, "Your Post Has Been Published!")
+            return redirect('forum:forum-board', kwargs['forum'])
+
+        else:
+            print("error: ", new_post_form.errors)
+            new_post_form = NewPostForm(request.POST)
+
+            return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
+
+class ForumCommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    fields = ['message_body']
+
+    def get(self, request, *args, **kwargs):
+        new_comment_form = NewCommentForm()
+
+        return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
+    
+    def post(self, request, *args, **kwargs):
+
+        new_comment_form = NewCommentForm(request.POST)
+
+        if new_comment_form.is_valid():
+            
+            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
+            comment = new_comment_form.instance
+            comment.author = self.request.user
+            comment.datetime = new_comment_form.cleaned_data.get('datetime')
+            comment.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()          
+            
+            comment.save()
+            main_topic.thread_posts.add(comment.pk)
+            new_comment_form.save()
+
+            user = self.request.user
+            user.profile.posts_counter += 1
+            user.profile.save()
+
+            return redirect('forum:forum-board', kwargs['forum'])
+
+        else:
+            print("error: ", new_comment_form.errors)
+            new_comment_form = NewCommentForm(request.POST)
+
+            return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
+
+class ForumReplyCreateView(LoginRequiredMixin, CreateView):
+    model = Reply
+    fields = ['message_body']
+
+    def get(self, request, *args, **kwargs):
+        new_reply_form = NewReplyForm()
+
+        return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
+    
+    def post(self, request, *args, **kwargs):
+
+        new_reply_form = NewReplyForm(request.POST)
+
+        if new_reply_form.is_valid():
+
+            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
+
+            # reply_to_main_topic = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+            # comment_to_reply = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+            # reply_to_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+
+            # print(reply_to_main_topic)
+            # print(reply_to_reply)
+            # print(comment_to_reply)
+            # thread_id = models.ForeignKey(MainTopic, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
+            # reply_to_main_thread = models.ForeignKey(MainTopic, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
+            # reply_to_comment = models.ForeignKey(Comment, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
+            # reply_to_older_reply = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)#    
+            
+            
+            reply = new_reply_form.instance
+
+            reply.thread_id = main_topic
+            reply.reply_to_main_thread  = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+            reply.reply_to_comment  = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+            reply.reply_to_older_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+
+
+            reply.author = self.request.user
+            reply.datetime = new_reply_form.cleaned_data.get('datetime')
+            reply.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()      
+  
+            
+            reply.save()
+            #main_topic.thread_posts.add(comment.pk)
+            
+            new_reply_form.save()
+            
+            user = self.request.user
+            user.profile.posts_counter += 1
+            user.profile.save()
+
+            return redirect('forum:forum-board', kwargs['forum'])
+
+        else:
+            print("error: ", new_reply_form.errors)
+            new_reply_form = NewReplyForm(request.POST)
+            
+            return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
+
+
+
+
 class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = MainTopic
     template_name = 'forum/update_post.html'
@@ -209,132 +341,51 @@ class ForumReplyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
 
 
-class ForumNewPostCreateView(LoginRequiredMixin, CreateView):
-    model = MainTopic
-    fields = ['title', 'message_body']
 
-    def get(self, request, *args, **kwargs):
-        new_post_form = NewPostForm()
 
-        return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
-    
-    def post(self, request, *args, **kwargs):
-
-        new_post_form = NewPostForm(request.POST)
-
-        if new_post_form.is_valid():
-            new_post_form.instance.author = self.request.user
-            new_post_form.instance.datetime = new_post_form.cleaned_data.get('datetime')
-            new_post_form.instance.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()
-            new_post_form.save()
-
-            user = self.request.user
-            user.profile.posts_counter += 1
-            user.profile.save()
-
-            messages.success(request, "Your Post Has Been Published!")
-            return redirect('forum:forum-board', kwargs['forum'])
-
-        else:
-            print("error: ", new_post_form.errors)
-            new_post_form = NewPostForm(request.POST)
-
-            return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
-
-class ForumNewCommentCreateView(LoginRequiredMixin, CreateView):
+class ForumCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
-    fields = ['message_body']
+    template_name = 'forum/post_confirm_delete.html'
+    success_url = '/'
 
-    def get(self, request, *args, **kwargs):
-        new_comment_form = NewCommentForm()
+    def test_func(self):
+        post = self.get_object()
+        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+            return True
+        return False
 
-        return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
-    
+    def get_object(self, queryset=None):
+        obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+
+        return obj
+
     def post(self, request, *args, **kwargs):
 
-        new_comment_form = NewCommentForm(request.POST)
+        messages.success(request, "Your Post Has Been Deleted")
+        self.delete(request, *args, **kwargs)
+        return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
 
-        if new_comment_form.is_valid():
-            
-            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
-            comment = new_comment_form.instance
-            comment.author = self.request.user
-            comment.datetime = new_comment_form.cleaned_data.get('datetime')
-            comment.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()          
-            
-            comment.save()
-            main_topic.thread_posts.add(comment.pk)
-            new_comment_form.save()
 
-            user = self.request.user
-            user.profile.posts_counter += 1
-            user.profile.save()
-
-            return redirect('forum:forum-board', kwargs['forum'])
-
-        else:
-            print("error: ", new_comment_form.errors)
-            new_comment_form = NewCommentForm(request.POST)
-
-            return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
-
-class ForumNewReplyCreateView(LoginRequiredMixin, CreateView):
+class ForumReplyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Reply
-    fields = ['message_body']
+    template_name = 'forum/post_confirm_delete.html'
+    success_url = '/'
 
-    def get(self, request, *args, **kwargs):
-        new_reply_form = NewReplyForm()
+    def test_func(self):
+        post = self.get_object()
+        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+            return True
+        return False
 
-        return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
-    
+    def get_object(self, queryset=None):
+        obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+        obj.main_topic = self.kwargs['pk']
+        return obj
+
     def post(self, request, *args, **kwargs):
 
-        new_reply_form = NewReplyForm(request.POST)
-
-        if new_reply_form.is_valid():
-
-            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
-
-            # reply_to_main_topic = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            # comment_to_reply = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            # reply_to_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-
-            # print(reply_to_main_topic)
-            # print(reply_to_reply)
-            # print(comment_to_reply)
-            # thread_id = models.ForeignKey(MainTopic, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
-            # reply_to_main_thread = models.ForeignKey(MainTopic, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
-            # reply_to_comment = models.ForeignKey(Comment, blank=True, null=True, on_delete=models.CASCADE, related_name='+')
-            # reply_to_older_reply = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)#    
-            
-            
-            reply = new_reply_form.instance
-
-            reply.thread_id = main_topic
-            reply.reply_to_main_thread  = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            reply.reply_to_comment  = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            reply.reply_to_older_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-
-
-            reply.author = self.request.user
-            reply.datetime = new_reply_form.cleaned_data.get('datetime')
-            reply.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()      
-  
-            
-            reply.save()
-            #main_topic.thread_posts.add(comment.pk)
-            
-            new_reply_form.save()
-            
-            user = self.request.user
-            user.profile.posts_counter += 1
-            user.profile.save()
-
-            return redirect('forum:forum-board', kwargs['forum'])
-
-        else:
-            print("error: ", new_reply_form.errors)
-            new_reply_form = NewReplyForm(request.POST)
-            
-            return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
-
+        messages.success(request, "Your Post Has Been Deleted")
+        self.delete(request, *args, **kwargs)
+        return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+    
+    

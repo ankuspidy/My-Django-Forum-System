@@ -65,11 +65,13 @@
                 </div>
                 <div class="col-md-8">
                     <div class="card-body">
-                        {% if message|stringformat:"s" == "Python-Comment" %}
+                        {% if 'Comment' in message|stringformat:"s" %}
                                this is comment
+                               
                         {% else %}
                                 this is reply to: 
-                                
+
+
                                 {% if message.reply_to_comment %}
                                  {{ message.reply_to_comment.message_body }}
                                 {% elif message.reply_to_main_thread  %}
@@ -85,16 +87,16 @@
                         <div class="article article-text text-right">
                             <span class="article-title">
                                 {% if user.is_superuser or user.is_staff %}
-                                    {% if message|stringformat:"s" == "Python-Comment" %}
+                                    {% if 'Comment' in message|stringformat:"s" %}
                                         <a class="btn-sm btn-dark"
                                             href=" {% url 'forum:comment-update' message.forum post.id message.id %}">Edit</a>
                                         <a class="btn-sm btn-dark"
-                                            href=" {% url 'forum:new-comment' message.forum message.id %}">Remove</a>
+                                            href=" {% url 'forum:comment-delete' message.forum post.id message.id %}">Remove</a>
                                     {% else %}
                                       <a class="btn-sm btn-dark"
                                             href=" {% url 'forum:reply-update' message.forum post.id message.id %}">Edit</a>
                                       <a class="btn-sm btn-dark"
-                                           href=" {% url 'forum:new-comment' message.forum message.id %}">Remove</a>
+                                           href=" {% url 'forum:reply-delete' message.forum post.id message.id %}">Remove</a>
                                     {% endif %}
                                 
                                 {% endif %}
