@@ -5,128 +5,123 @@
 
 <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
     <div class="card-header">
+        <div class="article article-text text-center">
+            <h1 class="text-secondary text-center">{{ post.forum }} Forum</h1>
 
-        <div class="article article-text">
-            <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
-            <small class="text-muted">{{ object.date_objected|date:"j/n/y" }}</small>
-            <div class="article article-text text-center">
-            
-            
-                <span class="article-title">
-                    <a class="btn btn-dark"
-                      href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
-                  </span>
-
+            <span class="article-title ">
+                <a class="btn btn-dark" href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
+                <a class="btn btn-dark" href="{% url 'forum:forum-board' post.forum %}">Return to '{{ post.forum }}'
+                    Forum</a>
+            </span>
         </div>
 
-    </div>
-    <div class="card-body">
-            <div class="row no-gutters">
-                <div class="col-md-3 bg-warning">
-                    <!-- <img src="..." class="card-img" alt="..."> -->
-                    <p class="card-text text-muted text-center">Image...</p>
-                    <p class="card-text text-muted text-center">{{ post.author }}</p>
-                    <p class="card-text text-muted text-center">{{ post.author.profile.posts_counter }} Message{{ post.author.profile.posts_counter|pluralize}}</p>
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ post.title }}</h5>
-                        <p class="card-text">{{ post.message_body }}</p>
-                        <p class="card-text"><small class="text-muted">{{ post.datetime|date:"j/n/y-H:i" }}</small></p>
-                        <div class="article article-text text-right">
-                            <span class="article-title">
+        <div class="card-body text-secondary article-text">
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    <div class="col-md-2 bg-warning">
+                        <!-- <img src="..." class="card-img" alt="..."> -->
+                        <p class="card-text text-muted text-center">Image...</p>
+                        <p class="card-text text-muted text-center">{{ post.author }}</p>
+                        <p class="card-text text-muted text-center">{{ post.author.profile.posts_counter }}
+                            Message{{ post.author.profile.posts_counter|pluralize}}</p>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ post.title }}</h5>
+                            <p class="card-text">{{ post.message_body }}</p>
+                            <p class="card-text"><small class="text-muted">{{ post.datetime|date:"j/n/y-H:i" }}</small>
+                            </p>
+                            <p class="text-right">
+
                                 {% if post.author == user or user.is_superuser or user.is_staff %}
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:post-update' post.forum post.id %}">Edit</a>
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:post-delete' post.forum post.id %}">Remove</a>
-                                
-                                {% endif %}
-                                {% if post.author != user %}
-                                    <a class="btn-sm btn-dark"
-                                      href=" {% url 'forum:new-reply' post.forum post.id post.id %}">Reply</a>
-                                {% endif %}
 
-                              </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    {% for message in messages_thread %}
-    <hr/>
-    <div class="card-body">
-            <div class="row no-gutters">
-                <div class="col-md-3 bg-warning">
-                        <p class="card-text text-muted text-center">Image...</p>
-                        <p class="card-text text-muted text-center">{{ message.author }}</p>
-                        <p class="card-text text-muted text-center"><p class="card-text text-muted text-center">{{ message.author.profile.posts_counter }} Message{{ message.author.profile.posts_counter|pluralize}}</p></p>
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        {% if 'Comment' in message|stringformat:"s" %}
-                               this is comment
-                               
-                        {% else %}
-                                this is reply to: 
-
-
-                                {% if message.reply_to_comment %}
-                                 {{ message.reply_to_comment.message_body }}
-                                {% elif message.reply_to_main_thread  %}
-                                 {{ message.reply_to_main_thread }}
-                                {% else %}
-                                   {{ message.reply_to_older_reply.message_body }}
-                                {% endif %}
-                                
-                        {% endif %}
-
-                        <p class="card-text"><span id="{{ message.id }}"></span>{{ message.message_body }}</p>
-                        <p class="card-text"><small class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small></p>
-                        <div class="article article-text text-right">
-                            <span class="article-title">
-                                {% if message.author == user or user.is_superuser or user.is_staff %}
-                                    {% if 'Comment' in message|stringformat:"s" %}
-                                        <a class="btn-sm btn-dark"
-                                            href=" {% url 'forum:comment-update' message.forum post.id message.id %}">Edit</a>
-                                        <a class="btn-sm btn-dark"
-                                            href=" {% url 'forum:comment-delete' message.forum post.id message.id %}">Remove</a>
-                                    {% else %}
-                                      <a class="btn-sm btn-dark"
-                                            href=" {% url 'forum:reply-update' message.forum post.id message.id %}">Edit</a>
-                                      <a class="btn-sm btn-dark"
-                                           href=" {% url 'forum:reply-delete' message.forum post.id message.id %}">Remove</a>
-                                    {% endif %}
-                                
                                 {% endif %}
                                 {% if post.author != user %}
                                 <a class="btn-sm btn-dark"
-                                  href=" {% url 'forum:new-reply' message.forum post.id message.id %}">Reply</a>
-                            {% endif %}
-                              </span>
+                                    href=" {% url 'forum:new-reply' post.forum post.id post.id %}">Reply</a>
+                                {% endif %}
+
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {% for message in messages_thread %}
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    <div class="col-md-2 bg-warning">
+                        <!-- <img src="..." class="card-img" alt="..."> -->
+                        <p class="card-text text-muted text-center">Image...</p>
+                        <p class="card-text text-muted text-center">{{ message.author }}</p>
+                        <p class="card-text text-muted text-center">{{ message.author.profile.posts_counter }}
+                            Message{{ message.author.profile.posts_counter|pluralize}}</p>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ message.title }}</h5>
+                            {% if 'Comment' in message|stringformat:"s" %}
+                            this is comment
+
+                            {% else %}
+                            this is reply to:
+
+
+                            {% if message.reply_to_comment %}
+                            {{ message.reply_to_comment.message_body }}
+                            {% elif message.reply_to_main_thread  %}
+                            {{ message.reply_to_main_thread }}
+                            {% else %}
+                            {{ message.reply_to_older_reply.message_body }}
+                            {% endif %}
+
+                            {% endif %}
+
+                            <p class="card-text"><span id="{{ message.id }}"></span>{{ message.message_body }}</p>
+                            <p class="card-text"><small
+                                    class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small>
+                            </p>
+                            <p class="text-right">
+
+                                {% if message.author == user or user.is_superuser or user.is_staff %}
+                                <a class="btn-sm btn-dark"
+                                    href=" {% url 'forum:post-update' post.forum post.id %}">Edit</a>
+                                <a class="btn-sm btn-dark"
+                                    href=" {% url 'forum:post-delete' post.forum post.id %}">Remove</a>
+
+                                {% endif %}
+                                {% if message.author != user %}
+                                <a class="btn-sm btn-dark"
+                                    href=" {% url 'forum:new-reply' post.forum post.id post.id %}">Reply</a>
+                                {% endif %}
+
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+
+
+
         </div>
-    {% endfor %}
-
-
-
-
-
-    <div class="card-body text-secondary article-text text-center">
-        <p>
-            <a class="btn btn-warning"
-                href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
-            <a class="btn btn-warning" href="{% url 'forum:forum-board' post.forum %}">Return to '{{ post.forum }}' Forum</a>
-        </p>
+        <div class="card-body text-secondary article-text text-center">
+            <p>
+                <a class="btn btn-dark" href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
+                <a class="btn btn-dark" href="{% url 'forum:forum-board' post.forum %}">Return to '{{ post.forum }}'
+                    Forum</a>
+            </p>
+        </div>
     </div>
 
 </div>
-<!-- <div class="pb-4 pr-3"></div> -->
-</div>
+
+
 
 <div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
 <div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
