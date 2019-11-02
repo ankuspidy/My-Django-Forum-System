@@ -82,7 +82,7 @@
                                 
                         {% endif %}
 
-                        <p class="card-text">{{ message.message_body }}</p>
+                        <p class="card-text"><span id="{{ message.id }}"></span>{{ message.message_body }}</p>
                         <p class="card-text"><small class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small></p>
                         <div class="article article-text text-right">
                             <span class="article-title">

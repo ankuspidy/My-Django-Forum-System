@@ -20,12 +20,13 @@
                 <div class="form-group text-center">
                     <button class="btn btn-outline-danger" type="submit">Aprove Deletion</button>
                     {% if object.thread_id %}
-                    <a class="btn btn-outline-secondary"
+                        <a class="btn btn-outline-secondary"
                         href="{% url 'forum:post-detail' object.forum object.thread_id.id %}">Cancel Request</a>
                     {% else %}
                     <a class="btn btn-outline-secondary"
-                        href="{% url 'forum:post-detail' object.forum object.id %}">Cancel Request</a>
+                    href="{% url 'forum:post-detail' object.forum object.id %}">Cancel Request</a>
                     {% endif %}
+ 
                 </div>
             </form>
         </div>

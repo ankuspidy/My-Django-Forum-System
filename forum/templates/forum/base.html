@@ -99,6 +99,12 @@
               </a>
             </li>
             <li class="nav-item btn btn-secondary btn-light">
+                <a href="{% url 'profile' %}">
+                  Private Messages
+                  <i class="fas fa-user-circle"></i>
+                </a>
+              </li>
+            <li class="nav-item btn btn-secondary btn-light">
               <a href="{% url 'logout' %}">
                 Logout
                 <i class="fas fa-sign-out-alt"></i>
@@ -119,7 +125,14 @@
             </li>
             {% endif %}
 
+          </ul>
 
+          <ul class="navbar-nav">
+            <li>
+              <form action="{% url 'search-results' %}" method="get">
+                <input name="q" type="text" placeholder="Search..." style="width:300px;">
+              </form>
+            </li>
           </ul>
 
 

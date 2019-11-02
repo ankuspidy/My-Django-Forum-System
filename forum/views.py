@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
+from django.db.models import Q
+from django import forms as django_forms
 
 from django.contrib.auth.models import User
 from .models import Forum, ForumCategory, MainTopic, Comment, Reply
@@ -125,13 +127,15 @@ class ForumPostDetailView(DetailView):
     def get_absolute_url(self):
         return reverse_lazy('', kwargs={'pk': self.pk})
 
-
-class ForumMainTopicCreateView(LoginRequiredMixin, CreateView):
-    model = MainTopic
+class ForumPostCreateView(LoginRequiredMixin, TemplateView):
     fields = ['title', 'message_body']
 
     def get(self, request, *args, **kwargs):
         new_post_form = NewPostForm()
+
+        if 'pk' in kwargs:
+            new_post_form.fields['title'].widget = django_forms.HiddenInput()
+            new_post_form.fields['title'].required = False
 
         return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
     
@@ -139,18 +143,46 @@ class ForumMainTopicCreateView(LoginRequiredMixin, CreateView):
 
         new_post_form = NewPostForm(request.POST)
 
+        if 'pk' in kwargs:
+            new_post_form.fields['title'].widget = django_forms.HiddenInput()
+            new_post_form.fields['title'].required = False
+
         if new_post_form.is_valid():
-            new_post_form.instance.author = self.request.user
-            new_post_form.instance.datetime = new_post_form.cleaned_data.get('datetime')
-            new_post_form.instance.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()
-            new_post_form.save()
+            
+            path_string = self.request.get_full_path()
+
+            new_post = None
+            result_redirect = None
+            if path_string.find('reply') != -1:
+                new_post = Reply.objects.create(author=self.request.user, datetime=new_post_form.cleaned_data.get('datetime'), \
+                           message_body=request.POST['message_body'], forum=Forum.objects.all().filter(name=kwargs['forum']).first(), \
+                           thread_id=MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first(), \
+                           reply_to_main_thread=MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['id']).first(), \
+                           reply_to_comment=Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first(), \
+                           reply_to_older_reply=Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first())
+                result_redirect = redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+                
+                new_post_form.reply_to_main_thread  = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+                new_post_form.reply_to_comment  = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+                new_post_form.reply_to_older_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+            elif path_string.find('comment') != -1:
+                new_post = Comment.objects.create(author=self.request.user, datetime=date_time.now(), \
+                           message_body=request.POST['message_body'], forum=Forum.objects.all().filter(name=kwargs['forum']).first(), \
+                           thread_id=MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first())
+                result_redirect = redirect('forum:post-detail', kwargs['forum'], kwargs['pk']) 
+            else:
+                new_post = MainTopic.objects.create(author=self.request.user, datetime=date_time.now(),title=request.POST['title'], \
+                           message_body=request.POST['message_body'], forum=Forum.objects.all().filter(name=kwargs['forum']).first())
+                result_redirect = redirect('forum:forum-board', kwargs['forum'])
+
+            new_post.save()
 
             user = self.request.user
             user.profile.posts_counter += 1
             user.profile.save()
 
             messages.success(request, "Your Post Has Been Published!")
-            return redirect('forum:forum-board', kwargs['forum'])
+            return result_redirect
 
         else:
             print("error: ", new_post_form.errors)
@@ -158,181 +190,74 @@ class ForumMainTopicCreateView(LoginRequiredMixin, CreateView):
 
             return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
 
-class ForumCommentCreateView(LoginRequiredMixin, CreateView):
-    model = Comment
-    fields = ['message_body']
-
-    def get(self, request, *args, **kwargs):
-        new_comment_form = NewCommentForm()
-
-        return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
-    
-    def post(self, request, *args, **kwargs):
-
-        new_comment_form = NewCommentForm(request.POST)
-
-        if new_comment_form.is_valid():
-            
-            comment = new_comment_form.instance
-            comment.thread_id =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
-            comment.author = self.request.user
-            comment.datetime = new_comment_form.cleaned_data.get('datetime')
-            comment.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()          
-
-            comment.save()
-            new_comment_form.save()
-
-            user = self.request.user
-            user.profile.posts_counter += 1
-            user.profile.save()
-
-            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
-
-        else:
-            print("error: ", new_comment_form.errors)
-            new_comment_form = NewCommentForm(request.POST)
-
-            return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
-
-class ForumReplyCreateView(LoginRequiredMixin, CreateView):
-    model = Reply
-    fields = ['message_body']
-
-    def get(self, request, *args, **kwargs):
-        new_reply_form = NewReplyForm()
-
-        return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
-    
-    def post(self, request, *args, **kwargs):
-
-        new_reply_form = NewReplyForm(request.POST)
-
-        if new_reply_form.is_valid():
-
-            main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
-           
-            reply = new_reply_form.instance
-            reply.thread_id = main_topic
-            reply.reply_to_main_thread  = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            reply.reply_to_comment  = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-            reply.reply_to_older_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
-
-            reply.author = self.request.user
-            reply.datetime = new_reply_form.cleaned_data.get('datetime')
-            reply.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()      
-            
-            reply.save()
-            new_reply_form.save()
-            
-            user = self.request.user
-            user.profile.posts_counter += 1
-            user.profile.save()
-
-            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
-
-        else:
-            print("error: ", new_reply_form.errors)
-            new_reply_form = NewReplyForm(request.POST)
-            
-            return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
-
-
-
-
-class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = MainTopic
+class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'forum/update_post.html'
     fields = ['title', 'message_body']
    
+    def test_func(self, *args, **kwargs):
 
-    def test_func(self):
         post = self.get_object()
         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
             return True
         return False
 
-    
+    def get_context_data(self, **kwargs):
+        context = super(ForumPostsUpdateView, self).get_context_data(**kwargs)
+        current_object = self.get_object()
+        context['object'] = current_object
+        request = kwargs        
+        request['message_body'] = current_object.message_body
+        
+        form = NewPostForm(request)
+        if current_object.__class__.__name__ == "MainTopic":
+            request['title'] = current_object.title
+        else:
+            request['title'] = ''
+            form.fields['title'].widget = django_forms.HiddenInput()
+
+
+        context['form'] = form
+        return context
+
+    def get_object(self, queryset=None):
+        
+        path_string = self.request.get_full_path()
+        
+        if path_string.find('reply') != -1:
+            current_object = Reply.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            current_object.main_topic = self.kwargs['pk']
+        elif path_string.find('comment') != -1:
+            current_object = Comment.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            current_object.main_topic = self.kwargs['pk']
+        else:
+            current_object = MainTopic.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['pk'])
+        
+        return current_object
+
     def post(self, request, *args, **kwargs):
-
-        update_post_form = NewPostForm(request.POST)
-
-        if update_post_form.is_valid():
+        post_to_update = self.get_object()
+                
+        form = NewPostForm(self.request.POST)
+        if post_to_update.__class__.__name__ != 'MainTopic':
+            form.fields['title'].required = False
+        else:
+            post_to_update.title = request.POST['title']
+        
+        if form.is_valid():
             current_datetime = date_time.now()
-            main_topic = MainTopic.objects.filter(forum__name=kwargs['forum'], id=kwargs['pk'])
-            main_topic.update(title=request.POST['title'], message_body=request.POST['message_body'], datetime=current_datetime)
-            messages.success(request, "Your Post Has Been Updated!")
-            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
-
+            post_to_update.message_body = request.POST['message_body']
+            post_to_update.datetime = current_datetime
+            post_to_update.save()           
+            
+            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
+        
         else:
             print("error: ", update_post_form.errors)
-            update_post_form = NewPostForm(request.POST)
+            form = NewPostForm(self.request.POST)
 
-            return render(request, 'forum/update_post.html', {'update_post_form': update_post_form})
+            return render(request, 'forum/update_post.html', {'form': form})
 
-class ForumCommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Comment
-    template_name = 'forum/update_comment.html'
-    fields = ['message_body']
-
-    
-    def test_func(self, *args, **kwargs):
-
-        post = self.get_object()
-        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
-            return True
-        return False
-
-    def get_object(self, queryset=None):
-            obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
-            return obj
-
-    def post(self, request, *args, **kwargs):
-
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-
-        if form_class.is_valid(form):
-            
-            current_datetime = date_time.now()
-            comment = Comment.objects.filter(forum__name=kwargs['forum'], id=kwargs['id'])
-            comment.update(message_body=request.POST['message_body'], datetime=current_datetime)
-            
-            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
-   
-class ForumReplyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Reply
-    template_name = 'forum/update_reply.html'
-    fields = ['message_body']
-
-    def test_func(self, *args, **kwargs):
-
-        post = self.get_object()
-        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
-            return True
-        return False
-
-    def get_object(self, queryset=None):
-            obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
-            return obj
-
-    def post(self, request, *args, **kwargs):
-
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-
-        if form_class.is_valid(form):
-            
-            current_datetime = date_time.now()
-            reply = Reply.objects.filter(forum__name=kwargs['forum'], id=kwargs['id'])
-            reply.update(message_body=request.POST['message_body'], datetime=current_datetime)
-            
-            return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
-
-
-
-
-class ForumCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Comment
+class ForumPostDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'forum/post_confirm_delete.html'
     success_url = '/'
 
@@ -342,61 +267,25 @@ class ForumCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
             return True
         return False
 
-    def get_object(self, queryset=None):
-        obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
-
-        return obj
-
-    def post(self, request, *args, **kwargs):
-        user = self.request.user
-        user.profile.posts_counter -= 1
-        user.profile.save()
-
-        messages.success(request, "Your Post Has Been Deleted")
-        self.delete(request, *args, **kwargs)
-        return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
-
-
-class ForumReplyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Reply
-    template_name = 'forum/post_confirm_delete.html'
-    success_url = '/'
-
-    def test_func(self):
-        post = self.get_object()
-        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
-            return True
-        return False
+    def get_context_data(self, **kwargs):
+        context = super(ForumPostDeleteView, self).get_context_data(**kwargs)
+        context['object'] = self.get_object()
+        return context
 
     def get_object(self, queryset=None):
-        obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
-        obj.main_topic = self.kwargs['pk']
-        return obj
-
-    def post(self, request, *args, **kwargs):
-        user = self.request.user
-        user.profile.posts_counter -= 1
-        user.profile.save()
-
-        messages.success(request, "Your Post Has Been Deleted")
-        self.delete(request, *args, **kwargs)
-        return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
-    
-class ForumMainTopicDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = MainTopic
-    template_name = 'forum/post_confirm_delete.html'
-    success_url = '/'
-
-    def test_func(self):
-        post = self.get_object()
-        if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
-            return True
-        return False
-
-    def get_object(self, queryset=None):
-        obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['pk'])
-        obj.main_topic = self.kwargs['pk']
-        return obj
+        
+        path_string = self.request.get_full_path()
+        
+        if path_string.find('reply') != -1:
+            current_object = Reply.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            current_object.main_topic = self.kwargs['pk']
+        elif path_string.find('comment') != -1:
+            current_object = Comment.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            current_object.main_topic = self.kwargs['pk']
+        else:
+            current_object = MainTopic.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['pk'])
+        
+        return current_object
 
     def post(self, request, *args, **kwargs):
 
@@ -405,8 +294,328 @@ class ForumMainTopicDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteVi
         user.profile.save()
         
         messages.success(request, "Your Post Has Been Deleted")
-        self.delete(request, *args, **kwargs)
-        return redirect('forum:forum-board', kwargs['forum'])
+        post_to_delete = self.get_object()
+        class_name = post_to_delete.__class__.__name__
+        
+        result = None
+        if class_name is 'MainTopic':
+            result = redirect('forum:forum-board', kwargs['forum'])
+        else:
+            result = redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+        
+        post_to_delete.delete()
 
+        return result
+
+class SearchResultsView(LoginRequiredMixin, TemplateView):
+    template_name = 'search_results.html'
+    
+    def get(self, request, *args, **kwargs):
+        search_results = self.get_queryset()
+
+        return render(request, 'forum/search_results.html', {'search_results': search_results})
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        maintopics_list = MainTopic.objects.filter( Q(title__icontains=query) | Q(message_body__icontains=query) )
+        comments_list = Comment.objects.filter(message_body__icontains=query)
+        replies_list = Reply.objects.filter(message_body__icontains=query)
+
+        maintopics_list = list(maintopics_list.all())
+        comments_list = list(comments_list.all())
+        replies_list = list(replies_list.all())
+        
+        object_list = sorted(maintopics_list + comments_list + replies_list, key = attrgetter('datetime') )
+
+        return object_list
+
+
+
+
+# class ForumMainTopicCreateView(LoginRequiredMixin, CreateView):
+#     model = MainTopic
+#     fields = ['title', 'message_body']
+
+#     def get(self, request, *args, **kwargs):
+#         new_post_form = NewPostForm()
+
+#         return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
+    
+#     def post(self, request, *args, **kwargs):
+
+#         new_post_form = NewPostForm(request.POST)
+
+#         if new_post_form.is_valid():
+#             new_post_form.instance.author = self.request.user
+#             new_post_form.instance.datetime = date_time.now()#new_post_form.cleaned_data.get('datetime')
+#             new_post_form.instance.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()
+#             new_post_form.save()
+
+#             user = self.request.user
+#             user.profile.posts_counter += 1
+#             user.profile.save()
+
+#             messages.success(request, "Your Post Has Been Published!")
+#             return redirect('forum:forum-board', kwargs['forum'])
+
+#         else:
+#             print("error: ", new_post_form.errors)
+#             new_post_form = NewPostForm(request.POST)
+
+#             return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
+
+# class ForumCommentCreateView(LoginRequiredMixin, CreateView):
+#     model = Comment
+#     fields = ['message_body']
+
+#     def get(self, request, *args, **kwargs):
+#         new_comment_form = NewCommentForm()
+
+#         return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
+    
+#     def post(self, request, *args, **kwargs):
+
+#         new_comment_form = NewCommentForm(request.POST)
+
+#         if new_comment_form.is_valid():
+            
+#             comment = new_comment_form.instance
+#             comment.thread_id =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
+#             comment.author = self.request.user
+#             comment.datetime = new_comment_form.cleaned_data.get('datetime')
+#             comment.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()          
+
+#             comment.save()
+#             new_comment_form.save()
+
+#             user = self.request.user
+#             user.profile.posts_counter += 1
+#             user.profile.save()
+
+#             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+
+#         else:
+#             print("error: ", new_comment_form.errors)
+#             new_comment_form = NewCommentForm(request.POST)
+
+#             return render(request, 'forum/new_comment.html', {'new_comment_form': new_comment_form})
+
+# class ForumReplyCreateView(LoginRequiredMixin, CreateView):
+#     model = Reply
+#     fields = ['message_body']
+
+#     def get(self, request, *args, **kwargs):
+#         new_reply_form = NewReplyForm()
+
+#         return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
+    
+#     def post(self, request, *args, **kwargs):
+
+#         new_reply_form = NewReplyForm(request.POST)
+
+#         if new_reply_form.is_valid():
+
+#             main_topic =  MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first()
+           
+#             reply = new_reply_form.instance
+#             reply.thread_id = main_topic
+#             reply.reply_to_main_thread  = MainTopic.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+#             reply.reply_to_comment  = Comment.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+#             reply.reply_to_older_reply = Reply.objects.all().filter(forum__name=kwargs['forum'],id=kwargs['id']).first()
+
+#             reply.author = self.request.user
+#             reply.datetime = new_reply_form.cleaned_data.get('datetime')
+#             reply.forum =  Forum.objects.all().filter(name=kwargs['forum']).first()      
+            
+#             reply.save()
+#             new_reply_form.save()
+            
+#             user = self.request.user
+#             user.profile.posts_counter += 1
+#             user.profile.save()
+
+#             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+
+#         else:
+#             print("error: ", new_reply_form.errors)
+#             new_reply_form = NewReplyForm(request.POST)
+            
+#             return render(request, 'forum/new_reply.html', {'new_reply_form': new_reply_form})
+
+
+
+
+
+
+
+# class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+#     model = MainTopic
+#     template_name = 'forum/update_post.html'
+#     fields = ['title', 'message_body']
+   
+
+#     def test_func(self):
+#         post = self.get_object()
+#         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+#             return True
+#         return False
 
     
+#     def post(self, request, *args, **kwargs):
+
+#         update_post_form = NewPostForm(request.POST)
+
+#         if update_post_form.is_valid():
+#             current_datetime = date_time.now()
+#             main_topic = MainTopic.objects.filter(forum__name=kwargs['forum'], id=kwargs['pk'])
+#             main_topic.update(title=request.POST['title'], message_body=request.POST['message_body'], datetime=current_datetime)
+#             messages.success(request, "Your Post Has Been Updated!")
+#             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+
+#         else:
+#             print("error: ", update_post_form.errors)
+#             update_post_form = NewPostForm(request.POST)
+
+#             return render(request, 'forum/update_post.html', {'update_post_form': update_post_form})
+
+# class ForumCommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+#     model = Comment
+#     template_name = 'forum/update_comment.html'
+#     fields = ['message_body']
+
+    
+#     def test_func(self, *args, **kwargs):
+
+#         post = self.get_object()
+#         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+#             return True
+#         return False
+
+#     def get_object(self, queryset=None):
+#             obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+#             return obj
+
+#     def post(self, request, *args, **kwargs):
+
+#         form_class = self.get_form_class()
+#         form = self.get_form(form_class)
+
+#         if form_class.is_valid(form):
+            
+#             current_datetime = date_time.now()
+#             comment = Comment.objects.filter(forum__name=kwargs['forum'], id=kwargs['id'])
+#             comment.update(message_body=request.POST['message_body'], datetime=current_datetime)
+            
+#             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
+   
+# class ForumReplyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+#     model = Reply
+#     template_name = 'forum/update_reply.html'
+#     fields = ['message_body']
+
+#     def test_func(self, *args, **kwargs):
+
+#         post = self.get_object()
+#         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+#             return True
+#         return False
+
+#     def get_object(self, queryset=None):
+#             obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+#             return obj
+
+#     def post(self, request, *args, **kwargs):
+
+#         form_class = self.get_form_class()
+#         form = self.get_form(form_class)
+
+#         if form_class.is_valid(form):
+            
+#             current_datetime = date_time.now()
+#             reply = Reply.objects.filter(forum__name=kwargs['forum'], id=kwargs['id'])
+#             reply.update(message_body=request.POST['message_body'], datetime=current_datetime)
+            
+#             return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])  
+
+
+
+
+
+# class ForumCommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+#     model = Comment
+#     template_name = 'forum/post_confirm_delete.html'
+#     success_url = '/'
+
+#     def test_func(self):
+#         post = self.get_object()
+#         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+#             return True
+#         return False
+
+#     def get_object(self, queryset=None):
+#         obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+
+#         return obj
+
+#     def post(self, request, *args, **kwargs):
+#         user = self.request.user
+#         user.profile.posts_counter -= 1
+#         user.profile.save()
+
+#         messages.success(request, "Your Post Has Been Deleted")
+#         self.delete(request, *args, **kwargs)
+#         return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+
+
+# class ForumReplyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+#     model = Reply
+#     template_name = 'forum/post_confirm_delete.html'
+#     success_url = '/'
+
+#     def test_func(self):
+#         post = self.get_object()
+#         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+#             return True
+#         return False
+
+#     def get_object(self, queryset=None):
+#         obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+#         obj.main_topic = self.kwargs['pk']
+#         return obj
+
+#     def post(self, request, *args, **kwargs):
+#         user = self.request.user
+#         user.profile.posts_counter -= 1
+#         user.profile.save()
+
+#         messages.success(request, "Your Post Has Been Deleted")
+#         self.delete(request, *args, **kwargs)
+#         return redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+    
+# class ForumMainTopicDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+#     model = MainTopic
+#     template_name = 'forum/post_confirm_delete.html'
+#     success_url = '/'
+
+#     def test_func(self):
+#         post = self.get_object()
+#         if self.request.user == post.author or self.request.user.is_superuser or self.request.user.is_staff:
+#             return True
+#         return False
+
+#     def get_object(self, queryset=None):
+#         obj = self.model.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['pk'])
+#         obj.main_topic = self.kwargs['pk']
+#         return obj
+
+#     def post(self, request, *args, **kwargs):
+
+#         user = self.request.user
+#         user.profile.posts_counter -= 1
+#         user.profile.save()
+        
+#         messages.success(request, "Your Post Has Been Deleted")
+#         self.delete(request, *args, **kwargs)
+#         return redirect('forum:forum-board', kwargs['forum'])
+
+

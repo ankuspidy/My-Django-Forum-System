@@ -59,7 +59,7 @@ ROOT_URLCONF = 'my_django_forum.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'registration/templates'),],
+        'DIRS': [os.path.join(BASE_DIR, 'registration/templates'), os.path.join(BASE_DIR, 'forum/templates/forum')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -19,7 +19,8 @@ from django.conf.urls import url
 
 from django.contrib.auth import views as auth_views
 from registration import views as user_views
-from forum.views import ForumListView
+
+from forum.views import ForumListView, SearchResultsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,6 +37,8 @@ urlpatterns = [
         name='password_reset_done'),
     path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'),
         name='password_reset_complete'),
+        path('register/', user_views.RegisterFormView.as_view(), name='register'),
+    path('search/', SearchResultsView.as_view(), name='search-results'),
     path('', ForumListView.as_view(), name='home'),
     path('', include('forum.urls')),
     #path('', include('regististration.urls')),
