@@ -28,7 +28,7 @@
                     <div class="col-md-10">
                         <div class="card-body">
                             <h5 class="card-title">{{ post.title }}</h5>
-                            <p class="card-text">{{ post.message_body }}</p>
+                            <p class="card-text"><span id="{{ post.pk }}">{{ post.message_body }}</span></p>
                             <p class="card-text"><small class="text-muted">{{ post.datetime|date:"j/n/y-H:i" }}</small>
                             </p>
                             <p class="text-right">
@@ -53,9 +53,12 @@
 
             {% for message in messages_thread %}
             <div class="card mb-3">
+                    
                 <div class="row no-gutters">
+                    
+                    <span id="{{ message.pk }}">  </span>
                     <div class="col-md-2 bg-warning">
-                        <!-- <img src="..." class="card-img" alt="..."> -->
+                        <!-- <img src="..." class="card-img" alt="..."> --> 
                         <p class="card-text text-muted text-center">Image...</p>
                         <p class="card-text text-muted text-center">{{ message.author }}</p>
                         <p class="card-text text-muted text-center">{{ message.author.profile.posts_counter }}
@@ -63,40 +66,86 @@
                     </div>
                     <div class="col-md-10">
                         <div class="card-body">
+
+                            
                             <h5 class="card-title">{{ message.title }}</h5>
-                            {% if 'Comment' in message|stringformat:"s" %}
-                            this is comment
+                            {% if 'Reply' in message|stringformat:"s" %}
+                           
+                                <div class="card mb-3">
+                                    <div class="row no-gutters">
+                                        <div class="col-0 bg-warning">
+                                            <!-- <img src="..." class="card-img" alt="..."> -->
+                                            <div>&nbsp;</div>
+                                          
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="card-body">
+                                                {% if message.reply_to_comment %}
+                                                  
+                                                    <h5 class="card-title"><a
+                                                        href="?page=#{{ message.reply_to_comment.id }}">{{ message.reply_to_comment.author }} said:</a>
+                                                    </h5>
+                        
+                                                    <p class="card-text">    
+                                                            {{ message.reply_to_comment.message_body }}
+                                                    </p>
+                                                {% elif message.reply_to_main_thread  %}
+                                                    <h5 class="card-title"><a
+                                                        href="?page=#{{ message.page_number }}">{{ message.reply_to_main_thread.author }} said:</a>
+                                                    </h5>
+                        
+                                                    <p class="card-text">    
+                                                            {{ message.reply_to_main_thread }}
+                                                    </p>
+                                                {% else %}
+                                                    <h5 class="card-title"><a
+                                                        href="?page=#{{ message.reply_to_older_reply.pk }}">{{ message.reply_to_older_reply.author }} said:</a>
+                                                    </h5>
+                        
+                                                    <p class="card-text">    
+                                                            {{ message.reply_to_older_reply.message_body }}
+                                                    </p>
+                                                {% endif %}
+                                          
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            {% else %}
-                            this is reply to:
 
+                 
 
-                            {% if message.reply_to_comment %}
-                            {{ message.reply_to_comment.message_body }}
-                            {% elif message.reply_to_main_thread  %}
-                            {{ message.reply_to_main_thread }}
-                            {% else %}
-                            {{ message.reply_to_older_reply.message_body }}
                             {% endif %}
 
-                            {% endif %}
-
-                            <p class="card-text"><span id="{{ message.id }}"></span>{{ message.message_body }}</p>
+                            <p class="card-text">{{ message.message_body }}</p>
                             <p class="card-text"><small
                                     class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small>
                             </p>
                             <p class="text-right">
 
                                 {% if message.author == user or user.is_superuser or user.is_staff %}
+                                    {% if 'MainTopic' in message|stringformat:"s" %}
+                                    <a class="btn-sm btn-dark"
+                                        href=" {% url 'forum:post-update' message.forum message.id %}">Edit</a>
+                                    <a class="btn-sm btn-dark"
+                                        href=" {% url 'forum:post-delete' message.forum message.id %}">Remove</a>
+                                    {% elif 'Reply' in message|stringformat:"s" %}
+                                    <a class="btn-sm btn-dark"
+                                    href=" {% url 'forum:reply-update' message.forum post.pk message.id %}">Edit</a>
                                 <a class="btn-sm btn-dark"
-                                    href=" {% url 'forum:post-update' post.forum post.id %}">Edit</a>
-                                <a class="btn-sm btn-dark"
-                                    href=" {% url 'forum:post-delete' post.forum post.id %}">Remove</a>
+                                    href=" {% url 'forum:reply-delete' message.forum post.pk message.id %}">Remove</a>
+                                    {% else %}
+                                    <a class="btn-sm btn-dark"
+                                        href=" {% url 'forum:comment-update' message.forum post.pk message.id %}">Edit</a>
+                                    <a class="btn-sm btn-dark"
+                                        href=" {% url 'forum:comment-delete' message.forum post.pk message.id %}">Remove</a>
+                                    {% endif %}
+
 
                                 {% endif %}
                                 {% if message.author != user %}
                                 <a class="btn-sm btn-dark"
-                                    href=" {% url 'forum:new-reply' post.forum post.id post.id %}">Reply</a>
+                                    href=" {% url 'forum:new-reply' message.forum post.pk message.id %}">Reply</a>
                                 {% endif %}
 
                             </p>
@@ -118,6 +167,35 @@
             </p>
         </div>
     </div>
+
+
+   
+   
+
+    <div class="card-body text-secondary article-text text-center"> 
+        {% if messages_thread.has_previous %}
+            <a class="btn btn-outline-warning mb-4" href="?page=1">First</a>
+            <a class="btn btn-outline-warning mb-4" href="?page={{ messages_thread.previous_page_number }}">Previous</a>
+        {% endif %}
+        
+        {% for num in messages_thread.paginator.page_range %}
+            {% if messages_thread.number == num %}
+            <a class="btn btn-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+            {% elif num > messages_thread.number|add:'-3' and num < messages_thread.number|add:'3' %}
+            <a class="btn btn-outline-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if messages_thread.has_next %}
+            <a class="btn btn-outline-warning mb-4" href="?page={{ messages_thread.next_page_number }}">Next</a>
+            <a class="btn btn-outline-warning mb-4" href="?page={{ messages_thread.paginator.num_pages }}">Last</a>
+        {% endif %}
+    </div>
+
+
+
+
+
 
 </div>
 

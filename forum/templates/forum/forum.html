@@ -17,8 +17,7 @@
   
               <span class="article-title ">
                   <a href="{% url 'forum:new-post' forum_name %}" class="btn btn-warning">New Post</a>
-                  <a class="btn btn-warning" href="{% url 'forum:home' %}">Return to Forums List'
-                      Forum</a>
+                  <a class="btn btn-warning" href="{% url 'forum:home' %}">Return to Forums List</a>
               </span>
           </div>
           <div>&nbsp;</div>
@@ -30,9 +29,9 @@
           {% for post in main_topics %}
           <div class="card mb-3">
               <div class="row no-gutters">
-                  <div class="col-md-1 ">
+                  <div class="col-0 bg-warning">
                     <div>&nbsp;</div>
-                    <div class="text-center"> <img class="text-center " src="{% static 'forum/images/message.png' %}" width="32px" height="32px" alt=""></div>
+                    <!-- <div class="text-center"> <img class="text-center " src="{% static 'forum/images/message.png' %}" width="32px" height="32px" alt=""></div> -->
 
                       <div>&nbsp;</div>
                   </div>
@@ -42,7 +41,7 @@
                               <div class="row">
                                 <div class="col-4 mt-1">
                                   <span class="article-title">
-                                    <a class="article-title" href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
+                                    <a class="article-title text-warning font-weight-bold" href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
                                   </span>
                                   <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
                                 </div>
@@ -99,95 +98,6 @@
 
 
   </div>
-
-
-
-  <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
-    <div class="card-header">
-
-      <div class="article article-text text-center">
-        {{ forum_name }}
-      </div>
-      <div class="article article-text text-center">
-        <a href="{% url 'forum:new-post' forum_name %}" class="btn btn-warning">New Post</a>
-      </div>
-
-    </div>
-    {% for post in main_topics %}
-
-    <div class="card-body text-secondary article-text">
-
-      <div class="container mb-1 mt-1 ">
-        <div class="row">
-          <div class="col-1">
-            <img src="{% static 'forum/images/message.png' %}" width="32px" height="32px" alt="">
-          </div>
-          <div class="col-3 mt-1">
-            <span class="article-title">
-              <a class="article-title" href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
-            </span>
-            <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
-          </div>
-          <div class="col-1 mt-1">
-            <span class="article-title">
-              <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
-              {{ post.like_list.count }}
-            </span>
-            <span class="article-title">
-
-              <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
-              {{ post.unlike_list.count }}
-            </span>
-          </div>
-
-
-
-
-          
-          <div class="col-3 article-title text-center mt-3">
-            {% for message_title, posts_amount in threads_posts_amount.items %}
-            {% if message_title == post.title %}
-            <span>Comments: {{ posts_amount }} </span>
-            {% endif %}
-            {% endfor %}
-
-          </div>
-          {% for message_title, last_message in messages_details.items %}
-
-          {% if message_title == post.title %}
-          <div class="col-3 mt-3">
-            {% if last_message != 'None' %}
-            <small class="text-sm-center">{{ last_message.message_body }}</small><br>
-            <small class="text-sm-center">{{ last_message.author }},
-              {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
-
-            {% else %}
-            <small class="text-sm-center">{{ post.message_body }}</small><br>
-            <small class="text-sm-center">{{ post.author }},
-              {{ post.datetime|date:"j/n/y-H:i" }}</small>
-            {% endif %}
-          </div>
-          {% endif %}
-
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    {% endfor %}
-
-  </div>
-
-</div>
-
-
-
-
-
-
-
-
-
 
 
 {% if is_paginated %}

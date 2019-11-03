@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.paginator import Paginator
+
 from django.contrib import messages
 from django.db.models import Q
 from django import forms as django_forms
@@ -65,7 +67,6 @@ class ForumPostsListView(ListView):
 
     def get_last_message(self, forum_name, main_topics)->dict:
         last_messages = dict()
-        #threads_replies_amount = dict()
         threads_posts_amount = dict()
 
         if main_topics.count() == 0:
@@ -73,10 +74,9 @@ class ForumPostsListView(ListView):
         else:
             for thread in main_topics:
                 last_message_by_time = list()
-                comments = Comment.objects.filter(forum=thread.forum, thread_id=thread.id)#thread.thread_posts.all().order_by('datetime')          
+                comments = Comment.objects.filter(forum=thread.forum, thread_id=thread.id)
                 replies = Reply.objects.filter(forum=thread.forum, thread_id=thread.id)
 
-                #threads_replies_amount[thread.title] = replies.count()
                 threads_posts_amount[thread.title] = replies.count() + comments.count()
 
                 if comments.count() != 0:
@@ -91,22 +91,20 @@ class ForumPostsListView(ListView):
                 else:
                     last_messages[thread.title] = "None"
                 
-            return (last_messages, threads_posts_amount)# threads_replies_amount)
-    
+            return (last_messages, threads_posts_amount)
+
     def get_context_data(self, **kwargs):
         context = super(ForumPostsListView, self).get_context_data(**kwargs)
         forum_name = self.kwargs['pk']
         main_topics = MainTopic.objects.filter(forum__name=forum_name)
         messages_details = self.get_last_message(forum_name, main_topics)
         context = dict(forum_name=forum_name, main_topics=main_topics, messages_details=messages_details[0], \
-                       threads_posts_amount=messages_details[1])#replies_amount=messages_details[1])
+                       threads_posts_amount=messages_details[1])
 
         return context
 
-class ForumPostDetailView(DetailView):
-    model = MainTopic
+class ForumPostDetailView(LoginRequiredMixin, TemplateView):
     template_name = 'forum/post_detail.html'
-
 
     def get_context_data(self, **kwargs):
 
@@ -120,6 +118,17 @@ class ForumPostDetailView(DetailView):
         replies = list(replies.all())
         messages_thread = sorted(comments + replies, key = attrgetter('datetime') )
 
+        paginator = Paginator(messages_thread, 10) 
+
+        page = self.request.GET.get('page')
+
+        posts_list = paginator.object_list
+        for post in posts_list:
+           post.page_number = page
+
+        paginator.object_list = posts_list
+
+        messages_thread = paginator.get_page(page)
         context = dict(forum_name=thread.forum, post=thread, messages_thread=messages_thread)
 
         return context
@@ -133,9 +142,14 @@ class ForumPostCreateView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         new_post_form = NewPostForm()
 
+        user = self.request.user
         if 'pk' in kwargs:
             new_post_form.fields['title'].widget = django_forms.HiddenInput()
             new_post_form.fields['title'].required = False
+        
+        elif user.is_superuser is False and user.is_staff is False:
+            new_post_form.fields['announcement'].widget = django_forms.HiddenInput()
+            new_post_form.fields['announcement'].required = False
 
         return render(request, 'forum/new_post.html', {'new_post_form': new_post_form})
     
@@ -146,6 +160,9 @@ class ForumPostCreateView(LoginRequiredMixin, TemplateView):
         if 'pk' in kwargs:
             new_post_form.fields['title'].widget = django_forms.HiddenInput()
             new_post_form.fields['title'].required = False
+        # elif user.is_superuser is False and user.is_staff is False:
+        #     new_post_form.fields['announcement'].widget = django_forms.HiddenInput()
+        #     new_post_form.fields['announcement'].required = False
 
         if new_post_form.is_valid():
             
@@ -154,7 +171,7 @@ class ForumPostCreateView(LoginRequiredMixin, TemplateView):
             new_post = None
             result_redirect = None
             if path_string.find('reply') != -1:
-                new_post = Reply.objects.create(author=self.request.user, datetime=new_post_form.cleaned_data.get('datetime'), \
+                new_post = Reply.objects.create(author=self.request.user, datetime=date_time.now(), \
                            message_body=request.POST['message_body'], forum=Forum.objects.all().filter(name=kwargs['forum']).first(), \
                            thread_id=MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first(), \
                            reply_to_main_thread=MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['id']).first(), \
@@ -171,8 +188,8 @@ class ForumPostCreateView(LoginRequiredMixin, TemplateView):
                            thread_id=MainTopic.objects.all().filter(forum__name=kwargs['forum'], id=kwargs['pk']).first())
                 result_redirect = redirect('forum:post-detail', kwargs['forum'], kwargs['pk']) 
             else:
-                new_post = MainTopic.objects.create(author=self.request.user, datetime=date_time.now(),title=request.POST['title'], \
-                           message_body=request.POST['message_body'], forum=Forum.objects.all().filter(name=kwargs['forum']).first())
+                new_post = MainTopic.objects.create(author=self.request.user, datetime=date_time.now(),announcement=request.POST['announcement'], \
+                title=request.POST['title'], message_body=request.POST['message_body'], forum=Forum.objects.all().filter(name=kwargs['forum']).first())
                 result_redirect = redirect('forum:forum-board', kwargs['forum'])
 
             new_post.save()
@@ -202,7 +219,7 @@ class ForumPostUpdateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         return False
 
     def get_context_data(self, **kwargs):
-        context = super(ForumPostsUpdateView, self).get_context_data(**kwargs)
+        context = super(ForumPostUpdateView, self).get_context_data(**kwargs)
         current_object = self.get_object()
         context['object'] = current_object
         request = kwargs        
@@ -288,11 +305,7 @@ class ForumPostDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         return current_object
 
     def post(self, request, *args, **kwargs):
-
-        user = self.request.user
-        user.profile.posts_counter -= 1
-        user.profile.save()
-        
+       
         messages.success(request, "Your Post Has Been Deleted")
         post_to_delete = self.get_object()
         class_name = post_to_delete.__class__.__name__
@@ -302,6 +315,10 @@ class ForumPostDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
             result = redirect('forum:forum-board', kwargs['forum'])
         else:
             result = redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
+
+        user = post_to_delete.author#self.request.user
+        user.profile.posts_counter -= 1
+        user.profile.save()
         
         post_to_delete.delete()
 

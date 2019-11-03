@@ -17,7 +17,7 @@ class NewPostForm(ModelForm):
   
     class Meta:
         model = MainTopic
-        fields = ['title', 'message_body']
+        fields = ['title', 'announcement', 'message_body']
         widgets = {
           'datetime': HiddenInput(),
           'forum': HiddenInput(),

@@ -20,27 +20,28 @@
 
   {% for category in forum_category %}
 
-
   <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
     <div class="card-header">
 
-      <div class="article article-text text-center">
+      <div class="article article-text">
         {{ category.name }}
       </div>
 
 
     </div>
-
+  </div>
+  <div class="mb-1"></div>
+  <div class="card  border-secondary shadow">
 
     {% for forum in category.forums.all %}
-    <div class="container mb-1 mt-1  ">
-      <div class="row ">
-          <div class="col-md-1">
+    <div class="container mb-1 mt-1 ">
+      <div class="row">
+          <div class="col-1">
               <img src="{% static 'forum/images/forum.png' %}" width="32px" height="32px" alt="">
-          </div>
+            </div>
         <div class="col-3">
           
-          <a class="article-title text-warning font-weight-bold" href="{% url 'forum:forums-list' forum.name %}">{{ forum }}</a>
+          <a class="article-title" href="{% url 'forum:forums-list' forum.name %}">{{ forum }}</a>
         </div>
         {% for forum_name, details in forum_details.items %}
          
@@ -59,9 +60,7 @@
               <small class="text-sm-center">{{ details.2.author }}, {{ details.2.datetime|date:"j/n/y-H:i" }}</small>
               {% endif %}
           </div>
-
           {% endif %}
-
         {% endfor %}
       </div>
     </div>
@@ -72,7 +71,7 @@
   {% endfor %}
 </div>
 
-<div class="pb-3 pr-3"></div>
+<div class="pb-4 pr-3"></div>
 {% endfor %}
 </div>
 
