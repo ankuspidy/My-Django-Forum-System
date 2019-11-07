@@ -7,10 +7,37 @@
         </div>
         <div class="card-body text-secondary article-text">
             {% if search_results %}
-                {% for result in search_results %}
+            {% for result in search_results %}
+
+            {% if result.profile %}          
+            
+            <div class="card mb-3">
+                    <div class="row no-gutters">
+                        <div class="col-md-2 bg-light border-right text-center ">
+                            <img class="rounded-circle article-img mt-4 ml-3" src="{{ result.profile.image.url }}">
+                            <p>                           
+                            {% if result != user %}
+                                <a href="{% url 'chat:chat-window' result.username %}"> <i class="fas fa-envelope"></i>&nbsp;P.M</a>
+                            {% endif %}
+                        </p>
+
+                        </div>
+                        <div class="col-md-10">
+                            <div class="card-body">
+                                <p class="card-text text-left"><legend>
+                                <a href="{% url 'user-profile' result.username %}">
+                                    {{ result }}</a></legend></p>
+                                    <p class="card-text text-right"><small>Member since: {{ result.date_joined|date:"j/n/y" }}</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+               
+            {% else %}
                 <div class="card mb-3">
                     <div class="row no-gutters">
-                        <div class="col-md-2 bg-warning">
+                            <div class="col-md-2 bg-light border-right text-center ">
                             <!-- <img src="..." class="card-img" alt="..."> -->
                         </div>
                         <div class="col-md-8">
@@ -32,7 +59,9 @@
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+            {% endif %}
+
+            {% endfor %}
             {% else %}
             <div class="card mb-3">
                 <div class=" no-gutters">

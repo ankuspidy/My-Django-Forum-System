@@ -63,7 +63,6 @@ class ChatWindowListView(LoginRequiredMixin, ListView, CreateView):
         
         messages_list = sorted(user_to_recipient + recipient_to_user, key = attrgetter('date_time') )
         context=dict(messages_list=messages_list, recipient=recipient, form=NewMessageForm)
-        ### it has 2 be two way message chat... 1->2 & 2->1 
         #### need to add auto-refresh....
         return context
 

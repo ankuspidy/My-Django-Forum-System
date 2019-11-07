@@ -351,11 +351,16 @@ class SearchResultsView(LoginRequiredMixin, TemplateView):
         maintopics_list = MainTopic.objects.filter( Q(title__icontains=query) | Q(message_body__icontains=query) )
         comments_list = Comment.objects.filter(message_body__icontains=query)
         replies_list = Reply.objects.filter(message_body__icontains=query)
+        users = User.objects.filter(username__icontains=query)
 
         maintopics_list = list(maintopics_list.all())
         comments_list = list(comments_list.all())
         replies_list = list(replies_list.all())
-        
-        object_list = sorted(maintopics_list + comments_list + replies_list, key = attrgetter('datetime') )
+        object_list = list(users.all())
+
+        messages = sorted(maintopics_list + comments_list + replies_list, key = attrgetter('datetime') )
+
+        object_list += messages
+        print(object_list)
 
         return object_list
