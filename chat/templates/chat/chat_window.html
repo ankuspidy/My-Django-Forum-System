@@ -1,0 +1,81 @@
+{% extends "forum/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="card border-secondary col-mb-ml-auto pb-auto shadow">
+    <div class="card-header">
+        <div class="article article-text">
+            <h1 class="text-secondary text-center">Chat with {{ recipient }}</h1>
+        </div>
+        <div class="card-body text-secondary article-text">
+
+            {% if messages_list %}
+                {% for message in messages_list %}
+                
+                    {% if message.author != recipient %}
+                        <div class="card mb-3">
+                            <div class="row no-gutters">
+                                <div class="col-md-2 bg-light border-right text-center ">
+                                    <img class="rounded-circle article-img mt-3 ml-3" src="{{ message.author.profile.image.url }}">
+                                    <p><small>me</small></p>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="card-body">
+                                       <p class="card-text">{{ message.message_body }}</p>
+                                       <p class="card-text text-right"><small>{{ message.date_time|date:"j/n/y-H:i" }}</small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else%}
+
+                    <div class="card mb-3">
+                        <div class="row  no-gutters">
+                            <div class="col-md-10">
+                                <div class="card-body">
+                                    <p class="card-text">{{ message.message_body }}</p>
+                                    <p class="card-text text-left"><small>{{ message.date_time|date:"j/n/y-H:i" }}</small></p>
+                                </div>
+                            </div>
+                            <div class="col-md-2 bg-light border-left text-center">
+                                    <img class="rounded-circle article-img mt-3 ml-4" src="{{ recipient.profile.image.url }}">
+                                    <p><small>{{ recipient }}</small></p>
+
+                            </div>
+      
+                        </div>
+                    </div>
+
+                    {% endif %}
+
+                {% endfor %}
+            {% else %}
+            <div class="card mb-3">
+                <div class=" no-gutters">
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title">No Messages</a>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+
+            <div class="card-body text-center">
+                    <form method="POST">
+                            {% csrf_token %}
+                            <fieldset class="form-group">
+                                {{ form|crispy }}
+                            </fieldset>
+                            <div class="form-group text-center">
+                                <button class="btn btn-outline-warning" type="submit">Send</button>
+                            </div>
+                    </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<div>&nbsp;</div>
+{% endblock content %}

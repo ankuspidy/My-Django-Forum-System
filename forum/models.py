@@ -20,7 +20,6 @@ class Post(models.Model):
 
     POST_TYPE = (
         ('normal', 'normal'),
-        ('announcement', 'announcement'),
         ('pinned', 'pinned'),
     )
 
@@ -41,7 +40,6 @@ class Post(models.Model):
 
 class MainTopic(Post):
     title = models.CharField(max_length=50, blank=False, default="")
-    #thread_posts = models.ManyToManyField(Comment, blank=True, related_name='+')
 
     def __str__(self):
         return self.title

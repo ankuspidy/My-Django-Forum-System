@@ -54,7 +54,7 @@ class ProfileUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['posts_counter', 'phone_number', 'birth_day', 'social_media', 'summary']
+        fields = ['posts_counter', 'phone_number', 'birth_day', 'social_media', 'summary', 'image']
 
         labels = {
               "posts_counter": "Number of Posts",

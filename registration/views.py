@@ -1,10 +1,9 @@
-from datetime import datetime, date
-
-from django.shortcuts import render, redirect, HttpResponse
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect
 from django.contrib.auth.views import FormView, PasswordResetView
+from django.views.generic import DetailView ,ListView
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template, render_to_string
@@ -82,8 +81,6 @@ class UserPasswordResetView(PasswordResetView):
 
         return redirect('password_reset_done')     
 
-
-
 class ProfileFormView(FormView):
     template_name = 'registration/profile.html'
 
@@ -98,7 +95,7 @@ class ProfileFormView(FormView):
     def post(self, request, *args, **kwargs):
 
         user_form = UserUpdateForm(request.POST, instance=request.user)
-        profile_form = ProfileUpdateForm(request.POST, instance=request.user.profile)#, request.FILES, )
+        profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile )
 
         if user_form.is_valid() and profile_form.is_valid():
             
@@ -109,9 +106,31 @@ class ProfileFormView(FormView):
 
         else:
             print("error: ", user_form.errors)
-            user_form = UserRegistrationForm(request.POST)
-            profile_form = ProfileUpdateForm(request.POST)
+            user_form = UserRegistrationForm(request.POST, instance=request.user)
+            profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
 
             context = dict(user_form=user_form, profile_form=profile_form)
 
             return render(request, 'registration/profile.html', context)
+
+
+class UserProfileView(LoginRequiredMixin, ListView):
+    model = User
+    template_name = 'registration/user_profile.html'
+
+    def get(self, request, *args, **kwargs):
+        super(UserProfileView, self).get(request, *args, **kwargs)
+        context = self.get_queryset()
+        result = None
+        
+        if self.request.user.username == self.kwargs['user']:
+            result = redirect('profile')
+        else:
+            result = render(request, 'registration/user_profile.html', {'user_profile' : context})
+
+        return result
+
+    def get_queryset(self):
+        queryset = User.objects.get(username=self.kwargs['user'])
+
+        return queryset

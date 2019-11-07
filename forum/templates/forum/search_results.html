@@ -1,5 +1,4 @@
 {% extends "forum/base.html" %}
-{% load crispy_forms_tags %}
 {% block content %}
 <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
     <div class="card-header">
@@ -7,35 +6,44 @@
             <h1 class="text-secondary text-center">Search Reulsts</h1>
         </div>
         <div class="card-body text-secondary article-text">
-            {% for result in search_results %}
-            <div class="card mb-3">
-                <div class="row no-gutters">
-                    <div class="col-md-2 bg-warning">
-                        <!-- <img src="..." class="card-img" alt="..."> -->
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            {% if result.title %}
-                            <h5 class="card-title"><a
-                                    href="{% url 'forum:post-detail' result.forum result.id %}">{{ result.title }}</a>
-                            </h5>
-                            {% else %}
-                            <h5 class="card-title"><a
-                                    href="{% url 'forum:post-detail' result.forum result.thread_id.id %}#{{ result.id }}">Realted
-                                    to: {{ result.thread_id }}</a> </h5>
-                            {% endif %}
+            {% if search_results %}
+                {% for result in search_results %}
+                <div class="card mb-3">
+                    <div class="row no-gutters">
+                        <div class="col-md-2 bg-warning">
+                            <!-- <img src="..." class="card-img" alt="..."> -->
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                {% if result.title %}
+                                <h5 class="card-title"><a
+                                        href="{% url 'forum:post-detail' result.forum result.id %}">{{ result.title }}</a>
+                                </h5>
+                                {% else %}
+                                <h5 class="card-title"><a
+                                        href="{% url 'forum:post-detail' result.forum result.thread_id.id %}#{{ result.id }}">Realted
+                                        to: {{ result.thread_id }}</a> </h5>
+                                {% endif %}
 
-                            <p class="card-text">{{ result.message_body }}</p>
-                            <p class="card-text"><small class="text-muted">{{ result.forum }} Forum - by
-                                    {{ result.author }}, {{ result.datetime|date:"j/n/y-H:i" }} </small></p>
+                                <p class="card-text">{{ result.message_body }}</p>
+                                <p class="card-text"><small class="text-muted">{{ result.forum }} Forum - by
+                                        {{ result.author }}, {{ result.datetime|date:"j/n/y-H:i" }} </small></p>
+                            </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
+            {% else %}
+            <div class="card mb-3">
+                <div class=" no-gutters">
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title">No Results</a>
+                        </h5>
+                    </div>
+                </div>
             </div>
-
-
-
-            {% endfor %}
+            {% endif %}
         </div>
     </div>
 </div>

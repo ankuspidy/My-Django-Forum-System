@@ -19,6 +19,7 @@ from django.conf.urls import url
 
 from django.contrib.auth import views as auth_views
 from registration import views as user_views
+from chat import views as chat_views
 
 from forum.views import ForumListView, SearchResultsView
 
@@ -28,7 +29,10 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name= 'registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
     path('profile/', user_views.ProfileFormView.as_view() , name='profile'),
+    path('user_profile/<user>', user_views.UserProfileView.as_view(), name='user-profile'),
     path('password-reset/', user_views.UserPasswordResetView.as_view(), name='password_reset'),
+    path('private-messages/', chat_views.PrivateMessagesListView.as_view(), name='private_messages'),
+    
     path('password-reset-confirm/<uidb64>/<token>/',
         auth_views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm.html'),
         name='password_reset_confirm'),
@@ -41,5 +45,6 @@ urlpatterns = [
     path('search/', SearchResultsView.as_view(), name='search-results'),
     path('', ForumListView.as_view(), name='home'),
     path('', include('forum.urls')),
+    path('', include('chat.urls')),
     #path('', include('regististration.urls')),
 ]

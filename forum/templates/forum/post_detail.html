@@ -6,6 +6,7 @@
 <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
     <div class="card-header">
         <div class="article article-text text-center">
+            
             <h1 class="text-secondary text-center">{{ post.forum }} Forum</h1>
 
             <span class="article-title ">
@@ -18,12 +19,31 @@
         <div class="card-body text-secondary article-text">
             <div class="card mb-3">
                 <div class="row no-gutters">
-                    <div class="col-md-2 bg-warning">
-                        <!-- <img src="..." class="card-img" alt="..."> -->
-                        <p class="card-text text-muted text-center">Image...</p>
-                        <p class="card-text text-muted text-center">{{ post.author }}</p>
+                    
+                    <div class="col-md-2 border-right bg-light text-center">
+                        <span>&nbsp;</span>
+                        <p class="card-text text-muted text-center">
+                           &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}"></p>
+                        <p class="card-text text-muted text-center"><a href="{% url 'user-profile' post.author %}">{{ post.author }}</a>
+                            {% if post.author != user %}
+                            <a href="{% url 'chat:chat-window' post.author %}"> <i class="fas fa-envelope"></i></a>
+                            {% endif %}
+                        </p>
+                        <p class="card-text text-muted text-center">
+                        {% if post.author in post.forum.moderator.all %}
+                                {{ post.forum }} Moderator
+                        {% elif post.author.is_superuser %}
+                            Administrator
+                        {% else %}
+                            Member
+                        {% endif %}    
+                        </p>
                         <p class="card-text text-muted text-center">{{ post.author.profile.posts_counter }}
                             Message{{ post.author.profile.posts_counter|pluralize}}</p>
+                        <p class="card-text text-muted text-center">
+
+                            
+                        </p>
                     </div>
                     <div class="col-md-10">
                         <div class="card-body">
@@ -33,7 +53,7 @@
                             </p>
                             <p class="text-right">
 
-                                {% if post.author == user or user.is_superuser or user.is_staff %}
+                                {% if post.author == user or user.is_superuser or post.author.groups.first == Moderator and user in post.forum.moderator.all %}
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:post-update' post.forum post.id %}">Edit</a>
                                 <a class="btn-sm btn-dark"
@@ -53,14 +73,29 @@
 
             {% for message in messages_thread %}
             <div class="card mb-3">
-                    
+                   
                 <div class="row no-gutters">
                     
                     <span id="{{ message.pk }}">  </span>
-                    <div class="col-md-2 bg-warning">
-                        <!-- <img src="..." class="card-img" alt="..."> --> 
-                        <p class="card-text text-muted text-center">Image...</p>
-                        <p class="card-text text-muted text-center">{{ message.author }}</p>
+                    <div class="col-md-2 border-right bg-light text-center">
+                            <span>&nbsp;</span>
+                            <p class="card-text text-muted text-center">
+                               &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ message.author.profile.image.url }}"></p>
+                        <p class="card-text text-muted text-center">
+                            <a href="{% url 'user-profile' message.author %}">{{ message.author }}</a>
+                            {% if message.author != user %}
+                                <a href="{% url 'chat:chat-window' message.author %}"> <i class="fas fa-envelope"></i></a>
+                            {% endif %}
+                        </p>
+                        <p class="card-text text-muted text-center">
+                                {% if message.author in message.forum.moderator.all %}
+                                        {{ message.forum }} Moderator
+                                {% elif message.author.is_superuser %}
+                                    Administrator
+                                {% else %}
+                                    Member
+                                {% endif %}    
+                                </p>
                         <p class="card-text text-muted text-center">{{ message.author.profile.posts_counter }}
                             Message{{ message.author.profile.posts_counter|pluralize}}</p>
                     </div>
@@ -68,7 +103,6 @@
                         <div class="card-body">
 
                             
-                            <h5 class="card-title">{{ message.title }}</h5>
                             {% if 'Reply' in message|stringformat:"s" %}
                            
                                 <div class="card mb-3">
@@ -80,6 +114,7 @@
                                         </div>
                                         <div class="col-md-8">
                                             <div class="card-body">
+                                                
                                                 {% if message.reply_to_comment %}
                                                   
                                                     <h5 class="card-title"><a
@@ -122,8 +157,7 @@
                                     class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small>
                             </p>
                             <p class="text-right">
-
-                                {% if message.author == user or user.is_superuser or user.is_staff %}
+                                {% if message.author == user or user.is_superuser or message.author.groups.first == Moderator and user in message.forum.moderator.all %}
                                     {% if 'MainTopic' in message|stringformat:"s" %}
                                     <a class="btn-sm btn-dark"
                                         href=" {% url 'forum:post-update' message.forum message.id %}">Edit</a>

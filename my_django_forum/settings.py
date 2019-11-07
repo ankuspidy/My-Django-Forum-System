@@ -22,6 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+#SECRET_KEY = os.environ.get('SECRET_KEY')
 SECRET_KEY = '%n7#1k5myngethwi!gn$$qj&5b$7yy*n)jp!5%=kzla*y_v900'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -39,9 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'crispy_forms',
     'registration.apps.RegistrationConfig',
     'forum.apps.ForumConfig',
+    'chat.apps.ChatConfig',
 ]
 
 MIDDLEWARE = [
@@ -125,16 +128,31 @@ USE_TZ = True
 load_dotenv()
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 
+#Gmail
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'Naty <natylaza89@gmail.com>'
 EMAIL_HOST_USER = os.getenv('GMAIL_USER')
-EMAIL_HOST_PASSWORD = os.getenv('GMAIL_PASS')
 
+#AWS S3
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_REGION_NAME = 'eu-central-1'
+S3_USE_SIGV4 = True
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+
+#Heroku
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+#django_heroku.settings(locals())

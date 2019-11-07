@@ -1,0 +1,23 @@
+{% extends "forum/base.html" %}
+{% block content %}
+
+<div class="card mx-auto" style="width: 18rem;">
+
+  <div class="card-body text-center">
+    <h5 class="text-secondary text-center">{{ user_profile }}'s Profile</h5>
+    <p class="card-text text-muted text-center">
+      &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ user_profile.profile.image.url }}"></p>
+
+    <h6 class="font-small font-weight-light mt-n1 text-center">Posts Amount: {{ user_profile.profile.posts_counter }}
+    </h6>
+    <h6 class="font-small font-weight-light mt-n1 text-center">Birth Day:
+      {{ user_profile.profile.birth_day|date:"j/n/y"  }}</h6>
+    <h6 class="font-small font-weight-light mt-n1 text-center">Summary: {{ user_profile.profile.summary  }}</h6>
+    <h6 class="font-small font-weight-light mt-n1 text-center">Socail Media: {{ user_profile.profile.social_media  }}
+    </h6>
+    <a href="{% url 'chat:chat-window' user_profile %}" class="btn btn-dark"><i class="fas fa-envelope"></i>&nbsp;Send
+      Message</a>
+  </div>
+</div>
+
+{% endblock content %}

@@ -8,14 +8,14 @@
     <h4 class="article-text text-center text-justify text-sm-center">ברוכים הנמצאים</h4>
     <h5 class="article-text text-center text-justify text-sm-center">{{ user.username }}</h5>
 
-  </div>
+  
   {% else %}
   <h4 class="article-text text-center">Welcome!</h4>
   <p class="article-text p-1 text-center">Please sign up for our service in order to enjoy this great community!</p>
   <p class="text-center"><a class="btn btn-outline-warning shadow" href="{% url 'register' %}" role="button">Signup
       &raquo;</a></p>
   {% endif %}
-
+  </div>
 
 
   {% for category in forum_category %}
