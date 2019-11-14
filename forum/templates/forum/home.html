@@ -5,8 +5,7 @@
 <div class="container-fluid">
   <div class="jumbotron alert alert-light border border-secondary shadow">
     {% if user.is_authenticated %}
-    <h4 class="article-text text-center text-justify text-sm-center">ברוכים הנמצאים</h4>
-    <h5 class="article-text text-center text-justify text-sm-center">{{ user.username }}</h5>
+    <h5 class="article-text text-center text-justify text-sm-center">Welcome {{ user.username }}!</h5>
 
   
   {% else %}

@@ -5,7 +5,7 @@
 Iמ this project, I build a Forum System from scratch.<br>
 *** This porject is currently under development ***
 <br><br>
-Link to the Web Application: <a href="#">Live Demo Coming Soon...</a>
+Link to the Web Application: <a href="http://mydjangoforum.herokuapp.com/">Live Demo</a>
 </p>
 <table>
     <tr>

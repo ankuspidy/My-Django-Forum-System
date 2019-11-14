@@ -83,7 +83,7 @@
                             </p>
                             <p class="text-right">
 
-                                {% if post.author == user or user.is_superuser or post.author.groups.first == Moderator and user in post.forum.moderator.all %}
+                                {% if post.author == user or user.is_superuser or user in post.forum.moderator.all %}
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:post-update' post.forum post.id %}">Edit</a>
                                 <a class="btn-sm btn-dark"
@@ -212,7 +212,7 @@
                                     class="text-muted">{{ message.datetime|date:"j/n/y-H:i" }}</small>
                             </p>
                             <p class="text-right">
-                                {% if message.author == user or user.is_superuser or message.author.groups.first == Moderator and user in message.forum.moderator.all %}
+                                {% if message.author == user or user.is_superuser or user in message.forum.moderator.all %}
                                     {% if 'MainTopic' in message|stringformat:"s" %}
                                     <a class="btn-sm btn-dark"
                                         href=" {% url 'forum:post-update' message.forum message.id %}">Edit</a>
