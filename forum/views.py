@@ -320,8 +320,18 @@ class ForumPostDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         return context
 
     def get_object(self, queryset=None):
-        current_object = Chat.objects.filter(participants__in=self.request.user)
-
+        
+        path_string = self.request.get_full_path()
+        
+        if path_string.find('reply') != -1:
+            current_object = Reply.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            current_object.main_topic = self.kwargs['pk']
+        elif path_string.find('comment') != -1:
+            current_object = Comment.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['id'])
+            current_object.main_topic = self.kwargs['pk']
+        else:
+            current_object = MainTopic.objects.get(forum__name=self.kwargs['forum'], id=self.kwargs['pk'])
+        
         return current_object
 
     def post(self, request, *args, **kwargs):
@@ -336,7 +346,7 @@ class ForumPostDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         else:
             result = redirect('forum:post-detail', kwargs['forum'], kwargs['pk'])
 
-        user = post_to_delete.author
+        user = post_to_delete.author#self.request.user
         user.profile.posts_counter -= 1
         user.profile.save()
         
