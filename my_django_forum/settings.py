@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [mydjangoforum.herokuapp.com]
 
@@ -127,7 +127,7 @@ USE_TZ = True
 
 
 
-STATIC_URL = '/static/'
+
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
@@ -154,5 +154,6 @@ S3_USE_SIGV4 = True
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 
 #Heroku
-#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-#django_heroku.settings(locals())
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+django_heroku.settings(locals())
