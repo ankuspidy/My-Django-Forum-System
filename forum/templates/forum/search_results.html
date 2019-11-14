@@ -1,0 +1,103 @@
+{% extends "forum/base.html" %}
+{% block content %}
+<div class="card border-secondary col-mb-ml-auto pb-auto shadow">
+    <div class="card-header">
+        <div class="article article-text">
+            <h1 class="text-secondary text-center">Search Reulsts</h1>
+        </div>
+        <div class="card-body text-secondary article-text">
+            {% if search_results %}
+            {% for result in search_results %}
+
+            {% if result.profile %}          
+            
+            <div class="card mb-3">
+                    <div class="row no-gutters">
+                        <div class="col-md-2 bg-light border-right text-center ">
+                            <img class="rounded-circle article-img mt-4 ml-3" src="{{ result.profile.image.url }}">
+                            <p>                           
+                            {% if result != user %}
+                                <a href="{% url 'chat:chat-window' result.username %}"> <i class="fas fa-envelope"></i>&nbsp;P.M</a>
+                            {% endif %}
+                        </p>
+
+                        </div>
+                        <div class="col-md-10">
+                            <div class="card-body">
+                                <p class="card-text text-left"><legend>
+                                <a href="{% url 'user-profile' result.username %}">
+                                    {{ result }}</a></legend></p>
+                                    <p class="card-text text-right"><small>Member since: {{ result.date_joined|date:"j/n/y" }}</small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+               
+            {% else %}
+                <div class="card mb-3">
+                    <div class="row no-gutters">
+                            <div class="col-md-2 bg-light border-right text-center ">
+                            <!-- <img src="..." class="card-img" alt="..."> -->
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                {% if result.title %}
+                                <h5 class="card-title"><a
+                                        href="{% url 'forum:post-detail' result.forum result.id %}">{{ result.title }}</a>
+                                </h5>
+                                {% else %}
+                                <h5 class="card-title"><a
+                                        href="{% url 'forum:post-detail' result.forum result.thread_id.id %}#{{ result.id }}">Realted
+                                        to: {{ result.thread_id }}</a> </h5>
+                                {% endif %}
+
+                                <p class="card-text">{{ result.message_body }}</p>
+                                <p class="card-text"><small class="text-muted">{{ result.forum }} Forum - by
+                                        {{ result.author }}, {{ result.datetime|date:"j/n/y-H:i" }} </small></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% endfor %}
+            {% else %}
+            <div class="card mb-3">
+                <div class=" no-gutters">
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title">No Results</a>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% if search_results.has_previous %}
+  <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+  <a class="btn btn-outline-info mb-4" href="?page={{ search_results.previous_page_number }}">Previous</a>
+{% endif %}
+
+{% for num in search_results.paginator.page_range %}
+    {% if search_results.number == num %}
+      <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+    {% elif num > search_results.number|add:'-3' and num < search_results.number|add:'3' %}
+      <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+    {% endif %}
+{% endfor %}
+
+{% if search_results.has_next %}
+  <a class="btn btn-outline-info mb-4" href="?page={{ search_results.next_page_number }}">Next</a>
+  <a class="btn btn-outline-info mb-4" href="?page={{ search_results.paginator.num_pages }}">Last</a>
+{% endif %}
+
+
+
+
+<div>&nbsp;</div>
+{% endblock content %}

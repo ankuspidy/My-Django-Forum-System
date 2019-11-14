@@ -1,0 +1,199 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Forum Management</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Secular+One&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css">
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+    integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+  <!-- Font Awesome JS -->
+  <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/solid.js"
+    integrity="sha384-tzzSw1/Vo+0N5UhStP3bvwWPq+uvzCMfrN1fEFe+xBmv1C/AtVX5K0uZtmcHitFZ"
+    crossorigin="anonymous"></script>
+  <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/fontawesome.js"
+    integrity="sha384-6OIrr52G08NpOFSZdxxz1xdNSndlD4vdcf/q2myIUVO0VsqaGHJsB0RaBE01VTOY"
+    crossorigin="anonymous"></script>
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="{% static 'forum/vendor/bootstrap/css/bootstrap.min.css' %}">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'forum/css/simple-sidebar.css' %}">
+  <link rel="stylesheet" href="{% static 'forum/css/main.css' %}">
+
+</head>
+
+<body background="{% static 'forum/images/bg.jpeg' %}">
+
+  <div class="d-flex" id="wrapper">
+
+
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
+
+        <!--<button class="btn btn-primary" id="menu-toggle">
+          <span class="navbar-toggler-icon" data-toggle="collapse"></span>
+        </button>-->
+        {% if user.is_authenticated %}
+        <span class="navbar-toggler border-0"" data-toggle=" collapse" aria-expanded="false"
+          aria-label="Toggle navigation">
+          <img class="rounded-circle article-img" src="{{ user.profile.image.url }}">
+          <a class="" href="{% url 'forum:home' %}">{{ user }}</a>
+        </span>
+        {% endif %}
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+
+        </button>
+        <!-- <button class="navbar-toggler" id="menu-toggle">
+          <span class="bg-warning navbar-toggler-icon" data-toggle="collapse"></span>
+        </button> -->
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+          <ul class="navbar-nav  ">
+            <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'forum:home' %}">Forum Management</a>
+            </li>
+          </ul>
+
+          <ul class="navbar-nav mr-auto ml-auto mt-2 mt-lg-0">
+
+            {% if user.is_superuser %}
+            <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'admin:index' %}">
+                Admin Pannel
+                <i class="fas fa-users-cog"></i>
+              </a>
+            </li>
+            <!-- <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'forum:home' %}">
+                New Post
+                <i class="fas fa-envelope"></i>
+              </a>
+            </li> -->
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'profile' %}">
+                Profile
+                <i class="fas fa-user-circle"></i>
+              </a>
+            </li>
+            <li class="nav-item btn btn-secondary btn-light">
+                <a href="{% url 'private_messages' %}">
+                  Private Messages
+                  <i class="fas fa-comments"></i>
+                </a>
+              </li>
+            <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'logout' %}">
+                Logout
+                <i class="fas fa-sign-out-alt"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'register' %}">
+                Register
+                <i class="fas fa-user-plus"></i>
+              </a>
+            </li>
+            <li class="nav-item btn btn-secondary btn-light">
+              <a href="{% url 'login' %}">
+                Login
+                <i class="fas fa-user-check"></i>
+              </a>
+            </li>
+            {% endif %}
+
+          </ul>
+
+          <ul class="navbar-nav">
+            <li>
+              <form action="{% url 'search-results' %}" method="get">
+                <input name="q" type="text" placeholder="Search..." style="width:300px;">
+              </form>
+            </li>
+          </ul>
+
+
+
+        </div>
+      </nav>
+
+      <div class="container-fluid">
+
+        <p>
+          {% if messages %}
+          <div class="container">
+            <div class="row">
+              <div class="col-2"></div>
+              <div class="col-sm">
+                {% for message in messages %}
+                <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
+                  <div class="card-header">
+                    <div class="article article-text ">
+                      <h3 class="text-secondary text-center">{{ message }}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                {% endfor %}
+              </div>
+              <div class="col-2"></div>
+            </div>
+          </div>
+          {% endif %}
+
+        </p>
+        <div class="container">
+          <div class="row">
+            <div class="col-1"></div>
+            <div class="col-10">
+              {% block content %}{% endblock %}
+            </div>
+            <div class="col-1"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="{% static 'forum/vendor/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'forum/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+
+  <!-- Menu Toggle Script -->
+  <script>
+    $("#menu-toggle").click(function (e) {
+      e.preventDefault();
+      $("#wrapper").toggleClass("toggled");
+    });
+  </script>
+
+</body>
+
+</html>
