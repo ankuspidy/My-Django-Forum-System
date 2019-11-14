@@ -107,6 +107,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+#Heroku
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+django_heroku.settings(locals())
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -124,9 +128,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-
-
-
 
 MEDIA_URL = '/media/'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -153,7 +154,3 @@ AWS_S3_REGION_NAME = 'eu-central-1'
 S3_USE_SIGV4 = True
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 
-#Heroku
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
-django_heroku.settings(locals())
