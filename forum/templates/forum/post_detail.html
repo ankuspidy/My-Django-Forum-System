@@ -2,7 +2,6 @@
 
 {% block content %}
 
-
 <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
     <div class="card-header">
         <div class="article article-text text-center">
@@ -10,7 +9,9 @@
             <h1 class="text-secondary text-center">{{ post.forum }} Forum</h1>
 
             <span class="article-title ">
+                {% if post.closed == False %}
                 <a class="btn btn-dark" href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
+                {% endif %}
                 <a class="btn btn-dark" href="{% url 'forum:forum-board' post.forum %}">Return to '{{ post.forum }}'
                     Forum</a>
             </span>
@@ -24,11 +25,40 @@
                         <span>&nbsp;</span>
                         <p class="card-text text-muted text-center">
                            &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}"></p>
-                        <p class="card-text text-muted text-center"><a href="{% url 'user-profile' post.author %}">{{ post.author }}</a>
-                            {% if post.author != user %}
-                            <a href="{% url 'chat:chat-window' post.author %}"> <i class="fas fa-envelope"></i></a>
-                            {% endif %}
-                        </p>
+                           <p class="card-text text-muted text-center font-weight-bold">
+                                <!-- Button trigger modal -->
+                                {% if post.author != user %}
+                                    <a type="media_type" data-toggle="modal" href="#{{ post.author }}">
+                                {% else %}
+                                <a href="{% url 'user-profile' post.author %}">
+                                {% endif %}
+                                {{ post.author }}</a></p>
+                                <!-- Modal -->
+                                <div class="modal fade" id="{{ post.author }}" tabindex="-1" role="dialog" aria-labelledby="{{ post.author }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+        
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        </div>
+                                        <div class="modal-body">
+                                        <p class="card-text text-muted text-center">
+                                                <h5 class="modal-title" id="{{ post.author }}">{{ post.author }}'s Profile</h5>
+                                                &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}"></p>
+                                            
+                                                <h6 class="font-small font-weight-light mt-n1 text-center">Posts Amount: {{ post.author.profile.posts_counter }}</h6>
+                                                <h6 class="font-small font-weight-light mt-n1 text-center">Birth Day: {{ post.author.profile.birth_day|date:"j/n/y"  }}</h6>
+                                                <h6 class="font-small font-weight-light mt-n1 text-center">Summary: {{ post.author.profile.summary  }}</h6>
+                                                <h6 class="font-small font-weight-light mt-n1 text-center">Socail Media: {{ post.author.profile.social_media  }}</h6>
+                                                <h6 class="font-small font-weight-light mt-n1 text-center">Member Since: {{ post.author.date_joined|date:"j/n/y"  }}</h6>
+                                                <a href="{% url 'chat:chat-window' post.author %}" class="btn btn-dark"><i class="fas fa-envelope"></i>&nbsp;Send
+                                                Message</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
                         <p class="card-text text-muted text-center">
                         {% if post.author in post.forum.moderator.all %}
                                 {{ post.forum }} Moderator
@@ -60,7 +90,7 @@
                                     href=" {% url 'forum:post-delete' post.forum post.id %}">Remove</a>
 
                                 {% endif %}
-                                {% if post.author != user %}
+                                {% if post.closed == False and post.author != user %}
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:new-reply' post.forum post.id post.id %}">Reply</a>
                                 {% endif %}
@@ -81,12 +111,40 @@
                             <span>&nbsp;</span>
                             <p class="card-text text-muted text-center">
                                &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ message.author.profile.image.url }}"></p>
-                        <p class="card-text text-muted text-center">
-                            <a href="{% url 'user-profile' message.author %}">{{ message.author }}</a>
-                            {% if message.author != user %}
-                                <a href="{% url 'chat:chat-window' message.author %}"> <i class="fas fa-envelope"></i></a>
-                            {% endif %}
-                        </p>
+                               <p class="card-text text-muted text-center font-weight-bold">
+                                    <!-- Button trigger modal -->
+                                    {% if message.author != user %}
+                                        <a type="media_type" data-toggle="modal" href="#{{ message.author }}">
+                                    {% else %}
+                                    <a href="{% url 'user-profile' message.author %}">
+                                    {% endif %}
+                                    {{ message.author }}</a></p>
+                                    <!-- Modal -->
+                                    <div class="modal fade" id="{{ message.author }}" tabindex="-1" role="dialog" aria-labelledby="{{ message.author }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+            
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                            </div>
+                                            <div class="modal-body">
+                                            <p class="card-text text-muted text-center">
+                                                    <h5 class="modal-title" id="{{ message.author }}">{{ message.author }}'s Profile</h5>
+                                                    &nbsp;&nbsp; <img class="rounded-circle article-img" src="{{ message.author.profile.image.url }}"></p>
+                                                
+                                                    <h6 class="font-small font-weight-light mt-n1 text-center">Posts Amount: {{ message.author.profile.posts_counter }}</h6>
+                                                    <h6 class="font-small font-weight-light mt-n1 text-center">Birth Day: {{ message.author.profile.birth_day|date:"j/n/y"  }}</h6>
+                                                    <h6 class="font-small font-weight-light mt-n1 text-center">Summary: {{ message.author.profile.summary  }}</h6>
+                                                    <h6 class="font-small font-weight-light mt-n1 text-center">Socail Media: {{ message.author.profile.social_media  }}</h6>
+                                                    <h6 class="font-small font-weight-light mt-n1 text-center">Member Since: {{ message.author.date_joined|date:"j/n/y"  }}</h6>
+                                                    <a href="{% url 'chat:chat-window' message.author %}" class="btn btn-dark"><i class="fas fa-envelope"></i>&nbsp;Send
+                                                    Message</a>
+                                            </div>
+                                        </div>
+                                        </div>
+                                    </div>
                         <p class="card-text text-muted text-center">
                                 {% if message.author in message.forum.moderator.all %}
                                         {{ message.forum }} Moderator
@@ -147,9 +205,6 @@
                                     </div>
                                 </div>
 
-
-                 
-
                             {% endif %}
 
                             <p class="card-text">{{ message.message_body }}</p>
@@ -177,7 +232,7 @@
 
 
                                 {% endif %}
-                                {% if message.author != user %}
+                                {% if post.closed == False and message.author != user %}
                                 <a class="btn-sm btn-dark"
                                     href=" {% url 'forum:new-reply' message.forum post.pk message.id %}">Reply</a>
                                 {% endif %}
@@ -189,22 +244,17 @@
             </div>
             {% endfor %}
 
-
-
-
         </div>
         <div class="card-body text-secondary article-text text-center">
             <p>
-                <a class="btn btn-dark" href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
+                {% if post.closed == False %}
+                    <a class="btn btn-dark" href=" {% url 'forum:new-comment' post.forum post.id %}">New Comment</a>
+                {% endif %}
                 <a class="btn btn-dark" href="{% url 'forum:forum-board' post.forum %}">Return to '{{ post.forum }}'
                     Forum</a>
             </p>
         </div>
     </div>
-
-
-   
-   
 
     <div class="card-body text-secondary article-text text-center"> 
         {% if messages_thread.has_previous %}
@@ -225,15 +275,7 @@
             <a class="btn btn-outline-warning mb-4" href="?page={{ messages_thread.paginator.num_pages }}">Last</a>
         {% endif %}
     </div>
-
-
-
-
-
-
 </div>
-
-
 
 <div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
 <div>&nbsp;&nbsp;&nbsp;&nbsp;</div>

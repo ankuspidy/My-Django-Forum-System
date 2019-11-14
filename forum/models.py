@@ -40,6 +40,7 @@ class Post(models.Model):
 
 class MainTopic(Post):
     title = models.CharField(max_length=50, blank=False, default="")
+    closed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -59,5 +60,3 @@ class Reply(Post):
 
     def __str__(self):
         return f"{self.forum}-{self.__class__.__name__}"
-
-#Private messages 

@@ -2,98 +2,135 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import ListView, CreateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.contrib import messages
 from .models import Chat, Message
 from .forms import NewMessageForm
-# from datetime import datetime as date_time
 from operator import attrgetter
-# from django import forms as django_forms
 
 
-#TODO// add testusermixin..... it doesnt show that user is logged in
-class PrivateMessagesListView(LoginRequiredMixin, ListView): #UserPassesTestMixin
+class PrivateMessagesListView(LoginRequiredMixin, ListView):
     model = Chat
     template_name = 'chat/chat_list_window.html'
 
     def get_queryset(self):
-        queryset = Chat.objects.filter( Q(author=self.request.user) | Q(recipient=self.request.user))
+        queryset = dict()
+        private_chat = Chat.objects.filter(participants__pk=self.request.user.pk)
+        for chat in private_chat.all():
+            last_message = Message.objects.filter(chat_session=chat)
 
-        query_set = queryset
-        for message in queryset:
-            try:
-                object_to_filter = queryset.get(author=message.recipient, recipient=message.author)
-                query_set = queryset.exclude(author=message.author, recipient=message.recipient)
-                
-            except ObjectDoesNotExist:
-                continue
+            chat_participant = chat.__str__()
+            user_index = chat_participant.rfind(self.request.user.username)
 
-        #print(query_set)
-        return query_set
+            if user_index == 0:
+                user_index = 1
+            else:
+                user_index = 0
+
+            chat_participant = chat_participant.split(",")
+            chat_participant = User.objects.get(username=chat_participant[user_index])
+            queryset[chat_participant] = last_message.all().last()
+
+        return queryset
 
     def get_context_data(self, **kwargs):
-        print(kwargs)
         context = super(PrivateMessagesListView, self).get_context_data(**kwargs)
         context['chat_list'] = self.get_queryset()
 
-        ### maybe add query to filter last message for each user into a dict
         return context
 
 class ChatWindowListView(LoginRequiredMixin, ListView, CreateView):
     model = Chat
     template_name = 'chat/chat_window.html'
 
-    def get_context_data(self, **kwargs):       
-        #context = super(ChatWindowListView, self).get_context_data(**kwargs)   
-        recipient = User.objects.filter(username=self.kwargs['user']).first()
+    def get_context_data(self, **kwargs):
+        chat_participant = User.objects.filter(username=self.kwargs['user']).first()
+        chat_session = Chat.objects.filter(participants=chat_participant).filter(participants=self.request.user)
 
         try:
-            user_to_recipient = Chat.objects.get(author=self.request.user, recipient=recipient)
-            user_to_recipient = list(user_to_recipient.messages.all())
+            user_to_recipient = Message.objects.filter(author=self.request.user, recipient=chat_participant, chat_session=chat_session.all().first())
+            user_to_recipient = list(user_to_recipient.all())
         except ObjectDoesNotExist:
             user_to_recipient = []
         
         try:
-            recipient_to_user = Chat.objects.get(author=recipient, recipient=self.request.user)
-            recipient_to_user = list(recipient_to_user.messages.all())
+            recipient_to_user = Message.objects.filter(author=chat_participant, recipient=self.request.user, chat_session=chat_session.all().first())
+            recipient_to_user = list(recipient_to_user.all())
         except ObjectDoesNotExist:
             recipient_to_user = []
         
         messages_list = sorted(user_to_recipient + recipient_to_user, key = attrgetter('date_time') )
-        context=dict(messages_list=messages_list, recipient=recipient, form=NewMessageForm)
-        #### need to add auto-refresh....
+
+        paginator = Paginator(messages_list, 20) 
+
+        if 'page' in self.request.GET:
+            page =  self.request.GET.get('page')
+        else:
+            page = paginator.num_pages
+
+        messages_list = paginator.get_page(page)
+
+        context=dict(messages_list=messages_list, recipient=chat_participant, form=NewMessageForm)
+
         return context
 
     def post(self, request, *args, **kwargs):
 
-        print(self.kwargs)
         sender = self.request.user
         try:
             recipient = User.objects.get(username=self.kwargs['user'])
         except ObjectDoesNotExist:
             print("error...")
 
-        print(sender)
-        print(recipient)
         new_message = None
-        chat_session = None
-
+      
         if sender.username != recipient.username:
-            new_message = Message.objects.create(author=sender, recipient=recipient, message_body=request.POST['message_body'])
-            chat_session = Chat.objects.filter( Q(author=sender, recipient=recipient) | Q(author=recipient, recipient=sender)).first()
-            if chat_session == None:
-                chat_session = Chat.objects.create(author=sender, recipient=recipient)
-
-        else:
-            new_message = Message.objects.create(author=recipient, recipient=sender, message_body=request.POST['message_body'])
-            chat_session = Chat.objects.filter(author=recipient, recipient=sender).first()
-            if chat_session == None:
-                chat_session = Chat.objects.create(author=recipient, recipient=sender)
+            chat_object = Chat.objects.filter(participants=sender).filter(participants=recipient).first()
+ 
+            new_message = Message.objects.create(author=sender, recipient=recipient, message_body=request.POST['message_body'], \
+                                                 chat_session=chat_object)
+            
+            if chat_object == None:
+                chat_object = Chat.objects.create()
+                chat_object.participants.set([sender, recipient])
+                chat_object.save()
+                new_message.chat_session = chat_object
         
-        chat_session.messages.add(new_message)
         new_message.save()
-        chat_session.save()
 
         return redirect ('chat:chat-window', recipient)
+
+class ChatWindowDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Chat
+    template_name = 'chat/chat_confirm_delete.html'
+    success_url = reverse_lazy('private_messages')
+
+    def test_func(self):
+        chat = self.get_object()
+      
+        if self.request.user in chat.participants.all():
+            return True
+        return False
+
+    def get_context_data(self, **kwargs):
+        context = super(ChatWindowDeleteView, self).get_context_data(**kwargs)
+        recipient = User.objects.filter(username=self.kwargs['user']).first()
+
+        context=dict(recipient=recipient)
+        
+        return context
+
+    def get_object(self, queryset=None):
+        chat_participant = User.objects.filter(username=self.kwargs['user']).first()
+        chat_session = Chat.objects.filter(participants=chat_participant).filter(participants=self.request.user).first()
+
+        return chat_session
+
+    def post(self, request, *args, **kwargs):
+       
+        messages.success(request, "Your Chat Has Been Deleted")
+        return self.delete(request, *args, **kwargs)
+
+        

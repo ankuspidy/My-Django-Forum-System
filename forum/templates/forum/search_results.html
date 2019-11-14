@@ -76,5 +76,28 @@
         </div>
     </div>
 </div>
+
+
+{% if search_results.has_previous %}
+  <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+  <a class="btn btn-outline-info mb-4" href="?page={{ search_results.previous_page_number }}">Previous</a>
+{% endif %}
+
+{% for num in search_results.paginator.page_range %}
+    {% if search_results.number == num %}
+      <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+    {% elif num > search_results.number|add:'-3' and num < search_results.number|add:'3' %}
+      <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+    {% endif %}
+{% endfor %}
+
+{% if search_results.has_next %}
+  <a class="btn btn-outline-info mb-4" href="?page={{ search_results.next_page_number }}">Next</a>
+  <a class="btn btn-outline-info mb-4" href="?page={{ search_results.paginator.num_pages }}">Last</a>
+{% endif %}
+
+
+
+
 <div>&nbsp;</div>
 {% endblock content %}

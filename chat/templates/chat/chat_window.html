@@ -69,10 +69,31 @@
                             </fieldset>
                             <div class="form-group text-center">
                                 <button class="btn btn-outline-warning" type="submit">Send</button>
+                                <a href="{% url 'chat:chat-window-delete' recipient %}"  class="btn btn-outline-danger">Delete Chat</a>
                             </div>
                     </form>
 
             </div>
+
+            <div class="card-body text-secondary article-text text-center"> 
+                    {% if messages_list.has_previous %}
+                        <a class="btn btn-outline-warning mb-4" href="?page=1">First</a>
+                        <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.previous_page_number }}">Previous</a>
+                    {% endif %}
+                    
+                    {% for num in messages_list.paginator.page_range %}
+                        {% if messages_list.number == num %}
+                        <a class="btn btn-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+                        {% elif num > messages_list.number|add:'-3' and num < messages_list.number|add:'3' %}
+                        <a class="btn btn-outline-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if messages_list.has_next %}
+                        <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.next_page_number }}">Next</a>
+                        <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.paginator.num_pages }}">Last</a>
+                    {% endif %}
+                </div>
 
         </div>
     </div>

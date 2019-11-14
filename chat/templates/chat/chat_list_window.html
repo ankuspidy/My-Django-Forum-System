@@ -1,5 +1,7 @@
 {% extends "forum/base.html" %}
 {% block content %}
+
+
 <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
     <div class="card-header">
         <div class="article article-text">
@@ -9,55 +11,32 @@
      
         <div class="card-body text-secondary article-text">
             {% if chat_list %}
-                {% for chat in chat_list %}
-                <!-- 1->2 -->
-                {% if chat.author.username == user.username and chat.recipient.username != user.username %}
+                {% for chat_partner, last_message in chat_list.items %}
                     <div class="card mb-3">
                         <div class="row no-gutters">
                             <div class="col-md-1.5 bg-light border-right">
-                                <img class="rounded-circle article-img mt-3 ml-3" src="{{ chat.recipient.profile.image.url }}">
-                            </div>
-                            <div class="col-md-8">
-                                <div class="card-body">
-                                    <h6 class="card-title text-warning">
-                                    
-                                        <a href="{% url 'chat:chat-window' chat.recipient %}">{{ chat.recipient }}</a>
-                                   
-                                    </h6>
-                                    <p class="card-text">Last Message...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% elif chat.author.username != user.username and chat.recipient.username == user.username %}
-                    <div class="card mb-3">
-                        <div class="row no-gutters">
-                            <div class="col-md-1.5 bg-light border-right">
-                                <img class="rounded-circle article-img mt-3 ml-3" src="{{ chat.author.profile.image.url }}">
+                                <img class="rounded-circle article-img mt-3 ml-3" src="{{ chat_partner.profile.image.url }}">
                             </div>
                             <div class="col-md-8">
                                 <div class="card-body">
                                     <h6 class="card-title text-warning">
                                                                      
-                                        <a href="{% url 'chat:chat-window' chat.author %}">{{ chat.author }}</a>
+                                        <a href="{% url 'chat:chat-window' chat_partner %}">{{ chat_partner }}</a>
                                     
                                     </h6>
-                                    <p class="card-text">Last Message...</p>
+                                    <p class="card-text">Last Message: "{{ last_message.message_body }}"<br>
+                                                         from: {{ last_message.author }} </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-
-                   
-                {% endif %}
                 {% endfor %}
             {% else %}
             <div class="card mb-3">
                 <div class=" no-gutters">
 
                     <div class="card-body text-center">
-                        <h5 class="card-title">No Chat</a>
+                        <h5 class="card-title">No Chats</a>
                         </h5>
                     </div>
                 </div>

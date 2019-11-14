@@ -38,8 +38,6 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ['username', 'email', 'first_name', 'last_name']
 
-        #maybe need to validate mail here also...
-
 
 class ProfileUpdateForm(forms.ModelForm):
     image = forms.ImageField(required=False)
@@ -59,19 +57,4 @@ class ProfileUpdateForm(forms.ModelForm):
         labels = {
               "posts_counter": "Number of Posts",
           }
-
-    # def clean(self):
-    #     cleaned_data = self.cleaned_data
-
-
-    #     try:
-    #         profile_from_db = Profile.objects.get(nickname=nickname)
-    #         print("nickfromdb: ", profile_from_db.nickname)
-    #         if profile_from_db.nickname == nickname:
-    #             raise forms.ValidationError("Nickname Duplitcate")
-    #     except Profile.DoesNotExist:
-    #         profile_from_db = None
-    #        # add message.error.... 
-    #     else:
-    #         return cleaned_data
 

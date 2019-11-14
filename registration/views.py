@@ -22,26 +22,24 @@ class RegisterFormView(FormView):
     def get(self, request, *args, **kwargs):
         user_form = UserRegistrationForm()
         profile_form = ProfileUpdateForm()
-
-        return render(request, 'registration/register.html', {'user_form': user_form, 'profile_form':profile_form})
+        context = dict(user_form=user_form, profile_form=profile_form)
+        
+        return render(request, 'registration/register.html', context)
     
     def post(self, request, *args, **kwargs):
 
         user_form = UserRegistrationForm(request.POST)
-        profile_form = ProfileUpdateForm(request.POST)#, request.FILES, instance=request.user.profile)
+        profile_form = ProfileUpdateForm(request.POST)
 
         if user_form.is_valid() and profile_form.is_valid():
                
                 user_form.save()
-
                 profile_form.instance = user_form.instance.profile
                 profile_form.instance.phone_number = profile_form.cleaned_data.get('phone_number')
                 profile_form.instance.birth_day = profile_form.cleaned_data.get('birth_day')
                 profile_form.instance.social_media = profile_form.cleaned_data.get('social_media')
                 profile_form.instance.summary = profile_form.cleaned_data.get('summary')
-
                 profile_form.save()
-                
                 messages.success(request, 'Your profile has been created! You may login!')
 
                 return redirect('login')
@@ -50,8 +48,9 @@ class RegisterFormView(FormView):
             print("error: ", user_form.errors)
             user_form = UserRegistrationForm(request.POST)
             profile_form = ProfileUpdateForm(request.POST)
-
-            return render(request, 'registration/register.html', {'user_form': user_form, 'profile_form':profile_form})
+            context = dict(user_form=user_form, profile_form=profile_form)
+           
+            return render(request, 'registration/register.html', context)
 
 class UserPasswordResetView(PasswordResetView):
     template_name = "registration/password_reset.html"
@@ -87,7 +86,6 @@ class ProfileFormView(FormView):
     def get(self, request, *args, **kwargs):
         user_form = UserUpdateForm(instance=request.user)
         profile_form = ProfileUpdateForm(instance=request.user.profile)
-
         context = dict(user_form=user_form, profile_form=profile_form)
 
         return render(request, 'registration/profile.html', context)
@@ -97,22 +95,21 @@ class ProfileFormView(FormView):
         user_form = UserUpdateForm(request.POST, instance=request.user)
         profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile )
 
+        operation_result = None
         if user_form.is_valid() and profile_form.is_valid():
-            
             user_form.save()
             profile_form.save()
-            messages.success(request, 'Profile has been updated!')
-            return redirect('profile')
-
+            messages.success(request, 'Profile Has Been Updated!')
+            operation_result = redirect('profile')
         else:
             print("error: ", user_form.errors)
             user_form = UserRegistrationForm(request.POST, instance=request.user)
             profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
-
             context = dict(user_form=user_form, profile_form=profile_form)
 
-            return render(request, 'registration/profile.html', context)
+            operation_result = render(request, 'registration/profile.html', context)
 
+        return operation_result
 
 class UserProfileView(LoginRequiredMixin, ListView):
     model = User
@@ -121,14 +118,14 @@ class UserProfileView(LoginRequiredMixin, ListView):
     def get(self, request, *args, **kwargs):
         super(UserProfileView, self).get(request, *args, **kwargs)
         context = self.get_queryset()
-        result = None
+        operation_result = None
         
         if self.request.user.username == self.kwargs['user']:
-            result = redirect('profile')
+            operation_result = redirect('profile')
         else:
-            result = render(request, 'registration/user_profile.html', {'user_profile' : context})
+            operation_result = render(request, 'registration/user_profile.html', {'user_profile' : context})
 
-        return result
+        return operation_result
 
     def get_queryset(self):
         queryset = User.objects.get(username=self.kwargs['user'])
