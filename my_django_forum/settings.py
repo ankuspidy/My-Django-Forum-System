@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [mydjangoforum.herokuapp.com]
+ALLOWED_HOSTS = ['mydjangoforum.herokuapp.com']
 
 
 # Application definition
@@ -117,7 +117,7 @@ django_heroku.settings(locals())
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Jerusalem'
 
 USE_I18N = True
 
