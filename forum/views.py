@@ -199,12 +199,14 @@ class ForumPostCreateView(LoginRequiredMixin, TemplateView):
                 result_redirect = redirect('forum:post-detail', kwargs['forum'], kwargs['pk']) 
 
             else:
-                # is_closed = False
-                # if 'closed' in request.POST:
-                #     is_closed = True
+                is_closed = False
+                print(request.POST)
+                # dev('on') - prod('True')
+                if 'closed' in request.POST and request.POST['closed'] == 'on' or True:
+                    is_closed = True
                
                 new_post = MainTopic.objects.create(author=self.request.user, datetime=date_time.now(),announcement=request.POST['announcement'], \
-                                                    closed=request.POST['closed'], title=request.POST['title'], message_body=request.POST['message_body'], \
+                                                    closed=is_closed, title=request.POST['title'], message_body=request.POST['message_body'], \
                                                     forum=Forum.objects.all().filter(name=kwargs['forum']).first())
                 result_redirect = redirect('forum:forum-board', kwargs['forum'])
 

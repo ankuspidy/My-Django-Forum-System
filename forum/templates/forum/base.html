@@ -29,13 +29,16 @@
   <!-- Bootstrap core CSS -->
   <link rel="stylesheet" href="{% static 'forum/vendor/bootstrap/css/bootstrap.min.css' %}">
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="{% static 'forum/css/simple-sidebar.css' %}">
-  <link rel="stylesheet" href="{% static 'forum/css/main.css' %}">
+  <link rel="stylesheet" href="{% static '/forum/css/table.css' %}">
+  <link rel="stylesheet" href="{% static '/forum/css/simple-sidebar.css' %}">
+  <link rel="stylesheet" href="{% static '/forum/css/main.css' %}">
+  
+
 
 </head>
 
 <body background="{% static 'forum/images/bg.jpeg' %}">
-
+  
   <div class="d-flex" id="wrapper">
 
 
@@ -166,15 +169,20 @@
 
         </p>
         <div class="container">
-          <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
+          <div class="row-1">
+            <div class="col-side"></div>
+            <div class="col-center">
               {% block content %}{% endblock %}
             </div>
-            <div class="col-1"></div>
+            <div class="col-side"></div>
           </div>
         </div>
 
+
+
+
+
+        
       </div>
     </div>
     <!-- /#page-content-wrapper -->

@@ -3,14 +3,8 @@
 {% block content%}
 
 <div class="container-fluid">
-  <!-- Example row of columns -->
 
-
-
-
-
-
-  <div class="card border-secondary col-mb-ml-auto pb-auto shadow">
+  <div class="card border-light col-mb-ml-auto pb-auto shadow">
       <div class="card-header">
           <div class="article article-text text-center">
               <h1 class="text-secondary text-center">{{ forum_name }} Forum</h1>
@@ -22,135 +16,134 @@
           </div>
           <div>&nbsp;</div>
 
+
+
           {% if pinned_messages %}
           <h5 class="text-secondary text-center">Pinned Messages</h5>
+
+          <div align="center" class="card-body border-light ">
             {% for message in pinned_messages %}
-              
-            <div class="card mb-3">
-                <div class="row no-gutters">
-                    <div class="col-0 bg-warning">
-                      <div>&nbsp;</div>
-                      <!-- <div class="text-center"> <img class="text-center " src="{% static 'forum/images/message.png' %}" width="32px" height="32px" alt=""></div> -->
-
-                        <div>&nbsp;</div>
-                    </div>
-                    <div class="col-md-10">
-                        <div class="card-body">
-                            <div class="container mb-1 mt-1 ">
-                                <div class="row">
-                                  <div class="col-4 mt-1">
-                                    <span class="article-title">
-                                        {% if message.closed %} Closed: {% endif %}
-                                      <a class="article-title text-warning font-weight-bold" href=" {% url 'forum:post-detail' message.forum message.id %}">{{ message.title }}</a>
-                                    </span>
-                                    <span>{{ message.author }}, {{ message.datetime|date:"j/n/y" }}</span>
-                                  </div>
-                                  <div class="col-2 mt-3">
-                                    <span class="article-title">
-                                      <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
-                                      {{ message.like_list.count }}
-                                    </span>
-                                    <span class="article-title">
-                        
-                                      <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
-                                      {{ message.unlike_list.count }}
-                                    </span>
-                                  </div>
-
-
-                          
-                                </div>
-
-                                
-                              </div>  
-
-                              
-                        </div>
-                    </div>
+            
+            <div class='row article-title font-weight-bold shadow'>
+              <div class='column'>
+                <div class='forum-column pl-2 pt-2'>
+                  <span class="article-title">
+                    {% if message.closed %} Closed: {% endif %}
+                  <a class="article-title text-warning font-weight-bold" href=" {% url 'forum:post-detail' message.forum message.id %}">{{ message.title }}</a>
+                </span>
+              </br>
+              <span>{{ message.author }}, {{ message.datetime|date:"j/n/y" }}</span>
                 </div>
-            </div>
-            {% endfor %}
-          {% endif %}
-        
+              </div>
 
+              <div class='column text-center'>
+                <div class='forum-column pl-2 pt-3'>
+                  <span class="article-title">
+                    <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
+                    {{ message.like_list.count }}
+                  </span>
+                  <span class="article-title">
+      
+                    <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
+                    {{ message.unlike_list.count }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class='column text-center'>
+                <div class='forum-column pl-2 pt-2'>
+         
+                </div>
+              </div>
+             
+              <div class='column'>
+                <div class='double-column'>
+                  <div class='forum-column pl-2 pt-2'>
+       
+                  </div>
+                </div>
+                </div>
+                <hr/>
+            </div>
+            <div>&nbsp;</div>
+   {% endfor %}
+   {% endif %}
+
+           </div> 
+           
           {% if main_topics %}
             <h5 class="text-secondary text-center">Forum Posts</h5>
+            
+            
+            <div align="center" class="card-body border-light">
             {% for post in main_topics %}
             
-            <div class="card mb-3">
-                <div class="row no-gutters">
-                    <div class="col-0 bg-warning ">
-                      <div>&nbsp;</div>
-                      <!-- <div class="text-center"> <img class="text-center " src="{% static 'forum/images/message.png' %}" width="32px" height="32px" alt=""></div> -->
-
-                        <div>&nbsp;</div>
-                    </div>
-                    <div class="col-md-11">
-                        <div class="card-body">
-                            <div class="container mb-1 mt-1 ">
-                                <div class="row">
-                                  <div class="col-4 mt-1">
-                                    <span class="article-title">
-                                        {% if post.closed %} Closed: {% endif %}
-                                      <a class="article-title text-warning font-weight-bold" href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
-                                    </span>
-                                    <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
-                                  </div>
-                                  <div class="col-2 mt-3">
-                                    <span class="article-title">
-                                      <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
-                                      {{ post.like_list.count }}
-                                    </span>
-                                    <span class="article-title">
-                        
-                                      <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
-                                      {{ post.unlike_list.count }}
-                                    </span>
-                                  </div>
-
-
-                                  <div class="col-2 article-title text-center mt-1">
-                                      {% for message_title, posts_amount in threads_posts_amount.items %}
-                                      {% if message_title == post.title %}
-                                      <small>Posts: {{ posts_amount }}</small>
-                                      {% endif %}
-                                      {% endfor %}
-                          
-                                    </div>
-                                    {% for message_title, last_message in messages_details.items %}
-                          
-                                    {% if message_title == post.title %}
-                                    <div class="col-4 mt-1">
-                                      {% if last_message != 'None' %}
-                                      <small class="text-sm-center">{{ last_message.message_body }}</small><br>
-                                      <small class="text-sm-center">{{ last_message.author }},
-                                        {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
-                          
-                                      {% else %}
-                                      <small class="text-sm-center">{{ post.message_body }}</small><br>
-                                      <small class="text-sm-center">{{ post.author }},
-                                        {{ post.datetime|date:"j/n/y-H:i" }}</small>
-                                      {% endif %}
-                                    </div>
-                                    {% endif %}
-                          
-                                    {% endfor %}
-                                </div>
-
-                                
-                              </div>  
-
-                              
-                        </div>
-                    </div>
+              <div class='row article-title font-weight-bold shadow'>
+                <div class='column'>
+                  <div class='forum-column pl-2 pt-2'>
+                    <span class="article-title">
+                      {% if post.closed %} Closed: {% endif %}
+                    <a class="article-title text-warning font-weight-bold" href=" {% url 'forum:post-detail' post.forum post.id %}">{{ post.title }}</a>
+                  </span>
+                  <br/>
+                  <span>{{ post.author }}, {{ post.datetime|date:"j/n/y" }}</span>
+                  </div>
                 </div>
-            </div>
-            {% endfor %}
+
+                <div class='column text-center'>
+                  <div class='forum-column pl-2 pt-3'>
+                    <span class="article-title">
+                      <img class="mb-2" src="{% static 'forum/images/like.png' %}" width="20px" height="20px" alt="">
+                      {{ post.like_list.count }}
+                    </span>
+                    <span class="article-title">
+                      <img class="mt-1" src="{% static 'forum/images/unlike.png' %}" width="20px" height="20px" alt="">
+                      {{ post.unlike_list.count }}
+                    </span>
+                  </div>
+                </div>
+                
+                <div class='column text-center'>
+                  <div class='forum-column pl-2 pt-2'>
+                    {% for message_title, posts_amount in threads_posts_amount.items %}
+                      {% if message_title == post.title %}
+                        <small>Posts: {{ posts_amount }}</small>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+               
+                <div class='column'>
+                  <div class='double-column'>
+                    <div class='forum-column pl-2 pt-2'>
+                      {% for message_title, last_message in messages_details.items %}
+                        {% if message_title == post.title %}
+                          {% if last_message != 'None' %}
+                          <small class="text-sm-center">{{ last_message.message_body }}</small><br>
+                          <small class="text-sm-center">{{ last_message.author }},
+                            {{ last_message.datetime|date:"j/n/y-H:i" }}</small>
+              
+                          {% else %}
+                          <small class="text-sm-center">{{ post.message_body }}</small><br>
+                          <small class="text-sm-center">{{ post.author }},
+                            {{ post.datetime|date:"j/n/y-H:i" }}</small>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>  
+              <div>&nbsp;</div>
+                {% endfor %}
+              </div>  
             {% else %}
-            <h1 class="text-secondary text-center">No Posts.</h1>
+              <h1 class="text-secondary text-center">No Posts.</h1>
             {% endif %}
 </div>
 </div>
+</div>
+
 <div>&nbsp;&nbsp;</div>
 
 <div class="card-body text-secondary article-text text-center"> 
@@ -161,9 +154,9 @@
     
     {% for num in main_topics.paginator.page_range %}
         {% if main_topics.number == num %}
-        <a class="btn btn-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+          <a class="btn btn-warning mb-4" href="?page={{ num }}">{{ num }}</a>
         {% elif num > main_topics.number|add:'-3' and num < main_topics.number|add:'3' %}
-        <a class="btn btn-outline-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+          <a class="btn btn-outline-warning mb-4" href="?page={{ num }}">{{ num }}</a>
         {% endif %}
     {% endfor %}
     
@@ -172,5 +165,5 @@
         <a class="btn btn-outline-warning mb-4" href="?page={{ main_topics.paginator.num_pages }}">Last</a>
     {% endif %}
 </div>
-
+<div>&nbsp;&nbsp;</div>
 {% endblock content%}

@@ -9,45 +9,45 @@
         <div class="card-body text-secondary article-text">
 
             {% if messages_list %}
-                {% for message in messages_list %}
-                
-                    {% if message.author != recipient %}
-                        <div class="card mb-3">
-                            <div class="row no-gutters">
-                                <div class="col-md-2 bg-light border-right text-center ">
-                                    <img class="rounded-circle article-img mt-3 ml-3" src="{{ message.author.profile.image.url }}">
-                                    <p><small>me</small></p>
-                                </div>
-                                <div class="col-md-10">
-                                    <div class="card-body">
-                                       <p class="card-text">{{ message.message_body }}</p>
-                                       <p class="card-text text-right"><small>{{ message.date_time|date:"j/n/y-H:i" }}</small></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% else%}
+            {% for message in messages_list %}
 
-                    <div class="card mb-3">
-                        <div class="row  no-gutters">
-                            <div class="col-md-10">
-                                <div class="card-body">
-                                    <p class="card-text">{{ message.message_body }}</p>
-                                    <p class="card-text text-left"><small>{{ message.date_time|date:"j/n/y-H:i" }}</small></p>
-                                </div>
-                            </div>
-                            <div class="col-md-2 bg-light border-left text-center">
-                                    <img class="rounded-circle article-img mt-3 ml-4" src="{{ recipient.profile.image.url }}">
-                                    <p><small>{{ recipient }}</small></p>
-
-                            </div>
-      
+            {% if message.author != recipient %}
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    <div class="col-md-2 bg-light border-right text-center ">
+                        <img class="rounded-circle article-img mt-3 ml-3" src="{{ message.author.profile.image.url }}">
+                        <p><small>me</small></p>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <p class="card-text">{{ message.message_body }}</p>
+                            <p class="card-text text-right"><small>{{ message.date_time|date:"j/n/y-H:i" }}</small></p>
                         </div>
                     </div>
+                </div>
+            </div>
+            {% else%}
 
-                    {% endif %}
+            <div class="card mb-3">
+                <div class="row  no-gutters">
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <p class="card-text">{{ message.message_body }}</p>
+                            <p class="card-text text-left"><small>{{ message.date_time|date:"j/n/y-H:i" }}</small></p>
+                        </div>
+                    </div>
+                    <div class="col-md-2 bg-light border-left text-center">
+                        <img class="rounded-circle article-img mt-3 ml-4" src="{{ recipient.profile.image.url }}">
+                        <p><small>{{ recipient }}</small></p>
 
-                {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+            {% endif %}
+
+            {% endfor %}
             {% else %}
             <div class="card mb-3">
                 <div class=" no-gutters">
@@ -62,38 +62,42 @@
 
 
             <div class="card-body text-center">
-                    <form method="POST">
-                            {% csrf_token %}
-                            <fieldset class="form-group">
-                                {{ form|crispy }}
-                            </fieldset>
-                            <div class="form-group text-center">
-                                <button class="btn btn-outline-warning" type="submit">Send</button>
-                                <a href="{% url 'chat:chat-window-delete' recipient %}"  class="btn btn-outline-danger">Delete Chat</a>
-                            </div>
-                    </form>
+                <form method="POST">
+                    {% csrf_token %}
+                    <fieldset class="form-group">
+                        {{ form|crispy }}
+                    </fieldset>
+                    <div class="form-group text-center">
+                        <button class="btn btn-outline-warning" type="submit">Send</button>
+                        {% if messages_list %}
+                        <a href="{% url 'chat:chat-window-delete' recipient %}" class="btn btn-outline-danger">Delete
+                            Chat</a>
+                        {% endif %}
+                    </div>
+                </form>
 
             </div>
 
-            <div class="card-body text-secondary article-text text-center"> 
-                    {% if messages_list.has_previous %}
-                        <a class="btn btn-outline-warning mb-4" href="?page=1">First</a>
-                        <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.previous_page_number }}">Previous</a>
-                    {% endif %}
-                    
-                    {% for num in messages_list.paginator.page_range %}
-                        {% if messages_list.number == num %}
-                        <a class="btn btn-warning mb-4" href="?page={{ num }}">{{ num }}</a>
-                        {% elif num > messages_list.number|add:'-3' and num < messages_list.number|add:'3' %}
-                        <a class="btn btn-outline-warning mb-4" href="?page={{ num }}">{{ num }}</a>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if messages_list.has_next %}
-                        <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.next_page_number }}">Next</a>
-                        <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.paginator.num_pages }}">Last</a>
-                    {% endif %}
-                </div>
+            <div class="card-body text-secondary article-text text-center">
+                {% if messages_list.has_previous %}
+                <a class="btn btn-outline-warning mb-4" href="?page=1">First</a>
+                <a class="btn btn-outline-warning mb-4"
+                    href="?page={{ messages_list.previous_page_number }}">Previous</a>
+                {% endif %}
+
+                {% for num in messages_list.paginator.page_range %}
+                {% if messages_list.number == num %}
+                <a class="btn btn-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+                {% elif num > messages_list.number|add:'-3' and num < messages_list.number|add:'3' %}
+                <a class="btn btn-outline-warning mb-4" href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if messages_list.has_next %}
+                <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.next_page_number }}">Next</a>
+                <a class="btn btn-outline-warning mb-4" href="?page={{ messages_list.paginator.num_pages }}">Last</a>
+                {% endif %}
+            </div>
 
         </div>
     </div>

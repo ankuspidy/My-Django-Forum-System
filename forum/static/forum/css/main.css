@@ -1,6 +1,6 @@
-/*
-    DEMO STYLE
-*/
+
+
+
 
 @import "https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700";
 body {
@@ -11,10 +11,10 @@ body {
     background-size: cover; /* Resize the background image to cover the entire container */
 }
 
-
+/* 
 .forum{
-    font-size: 100px;
-}
+    font-size: 100px; 
+}*/
 
 p {
     font-family: 'Poppins', sans-serif;
@@ -83,7 +83,7 @@ span {
 }
 /********************
 Posts
-*********************/
+********************/
   
 .article-text {
     text-align: left;
@@ -148,7 +148,7 @@ a.article:hover {
 
 /* ---------------------------------------------------
     CONTENT STYLE
------------------------------------------------------ */
+----------------------------------------------------- 
 
 #content {
     width: 50%;
@@ -159,9 +159,21 @@ a.article:hover {
 
 /* ---------------------------------------------------
     MEDIAQUERIES
------------------------------------------------------ */
+----------------------------------------------------- 
 @viewport {
     width: device-width ;
     zoom: 1.0 ;
   }
+  */
+
+  @media screen and (min-width: 800px) {
+    .col-center {
+      width: 100%
+    }
+  
+    .double-column {
+      flex: 2
+    }
+  }
+ 
   

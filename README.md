@@ -2,7 +2,7 @@
 
 <h1><u>Welcome to My 2nd Django Project!</u></h1>
 <p>
-Iמ this project, I build a Forum System from scratch.<br>
+In this project, I build a Forum System from scratch.<br>
 *** This porject is currently under development ***
 <br><br>
 Link to the Web Application: <a href="http://mydjangoforum.herokuapp.com/">Live Demo</a>

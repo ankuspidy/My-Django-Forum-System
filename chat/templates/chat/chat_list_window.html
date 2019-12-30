@@ -14,14 +14,16 @@
                 {% for chat_partner, last_message in chat_list.items %}
                     <div class="card mb-3">
                         <div class="row no-gutters">
-                            <div class="col-md-1.5 bg-light border-right">
-                                <img class="rounded-circle article-img mt-3 ml-3" src="{{ chat_partner.profile.image.url }}">
+                            <div class="col-md-2 bg-light border-right text-center">
+                                <span><img class="rounded-circle article-img mt-3 ml-3" src="{{ chat_partner.profile.image.url }}"></span>
+                                <br/><span class="pt-2"><a href="{% url 'user-profile' chat_partner %}">{{ chat_partner }}</a></span>
+                                
                             </div>
                             <div class="col-md-8">
                                 <div class="card-body">
                                     <h6 class="card-title text-warning">
                                                                      
-                                        <a href="{% url 'chat:chat-window' chat_partner %}">{{ chat_partner }}</a>
+                                        <a href="{% url 'chat:chat-window' chat_partner %}">Chat Window</a>
                                     
                                     </h6>
                                     <p class="card-text">Last Message: "{{ last_message.message_body }}"<br>

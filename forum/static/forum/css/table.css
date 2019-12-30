@@ -1,0 +1,39 @@
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  text-align: left;
+}
+
+.white-column {
+  background-color: white;
+  height: 50px;
+}
+
+.forum-column {
+  background-color: white;
+  height: 100%;
+}
+
+.double-column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+}
+
+@media screen and (min-width: 800px) {
+  .column {
+    flex: 1
+  }
+
+  .double-column {
+    flex: 2
+  }
+}
